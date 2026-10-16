@@ -39,7 +39,7 @@ Honest Alpha lets the agent search freely and makes it impossible for the search
 ## What it found
 
 The S&P 500 from mid-2015 to 2022. SPY buy-and-hold: a Sharpe of 0.58 after 15 bps per side. The same model
-(Claude Opus 5.5 on Amazon Bedrock), the same gate and the same data ran three times, with one paragraph of the
+(Claude Opus 5.5 on Amazon Bedrock), the same gate and the same data ran four times, with one paragraph of the
 researcher's instructions changed:
 
 - **The careful researcher** ran 8 of its 60 trials and stopped itself: *"None of the remaining knobs is likely to
@@ -62,12 +62,31 @@ researcher's instructions changed:
   beat SPY after costs. The best, three parts SPY to one part SPY timing, reached 0.574 against SPY's 0.578; every
   sleeve added to SPY lowered the Sharpe. Its own note: *"stacking is unlikely to win."* The holdout stayed locked.
   Two sandboxes timed out while starting and were not counted as trials.
+- **The books researcher** tested published strategies as their authors wrote them, in 6 trials: Faber's 10-month
+  moving average on SPY reached a Sharpe of 0.33 after costs, Antonacci's 12-month absolute momentum 0.31,
+  Jegadeesh and Titman's 12-1 momentum 0.22, and momentum only in up markets -0.01. Blitz and van Vliet's
+  low-volatility stocks, a family added for this run, came closest: 50 names reached 0.62 after 15 bps against
+  SPY's 0.58, but 0.55 after 30 bps.
+- **Then a person talked to it at the desk.** Asked in Chinese to hold that low-volatility book with 100 names,
+  Claude answered that the space caps it at 50 and ran nothing; it suggested trading bands to cut turnover instead,
+  and ran them when the person agreed (T-0007): 0.64 after 15 bps and 0.5776 after 30 against SPY's 0.5767, the
+  first trial in that program to beat SPY at both cost levels. The luck gate stopped it (a Deflated Sharpe of 0.80
+  against 0.95), and $1M in it became $2.02M while the same $1M in SPY became $2.04M.
 
 No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 
 One limit: each ledger counts only its own trials and looks. The 28 blends were judged as if the 68 earlier trials
-on the same data had not happened, and a new program gets three fresh holdout looks. Across all three programs the
+on the same data had not happened, and a new program gets three fresh holdout looks. Across all four programs the
 holdout has been opened once.
+
+## The desk
+
+A person can add or change strategies by talking to the researcher in the live view, in words or with a pasted
+screenshot of a book page, a chart or a post. What they send chooses what is tested, never how it is judged: Claude
+translates it into ideas from the same space and says what the space cannot express, and each idea is screened, run
+in its own sandbox and written to the same ledger, so it raises the bar like any other trial. A trial that ran is
+never edited; changing one is a new trial. The ledger table sorts by any column, including what $1M became, and
+hides tries from view, but a hidden try still counts.
 
 ## What it cannot do
 
@@ -99,7 +118,8 @@ python scripts/check_setup.py         # one line per service
 python scripts/hunt.py --program demo --tip-file tips/forum_post.txt                  # the careful researcher
 python scripts/hunt.py --program eager --style eager --tip-file tips/forum_post.txt   # told to maximize
 python scripts/hunt.py --program stack --style stack --rounds 3                       # blends of strategies only
-python -m uvicorn honest_alpha.app:app --port 8800      # the live view
+python scripts/hunt.py --program books --style books --rounds 2                       # published strategies as written
+python -m uvicorn honest_alpha.app:app --port 8800      # the live view, with the desk
 python scripts/tamper_demo.py demo                      # edit a trial; the view shows where the chain broke
 python scripts/request_look.py demo T-0001 "why"        # a person asks the gate for a holdout look
 python -m pytest tests
