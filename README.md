@@ -67,9 +67,9 @@ researcher's instructions changed:
   Jegadeesh and Titman's 12-1 momentum 0.22, and momentum only in up markets -0.01. Blitz and van Vliet's
   low-volatility stocks, a family added for this run, came closest: 50 names reached 0.62 after 15 bps against
   SPY's 0.58, but 0.55 after 30 bps.
-- **Then a person talked to it at the desk.** Asked in Chinese to hold that low-volatility book with 100 names,
-  Claude answered that the space caps it at 50 and ran nothing; it suggested trading bands to cut turnover instead,
-  and ran them when the person agreed (T-0007): 0.64 after 15 bps and 0.5776 after 30 against SPY's 0.5767, the
+- **Then the desk, where a person talks to the researcher.** Asked in Chinese to hold that low-volatility book with
+  100 names, Claude answered that the space caps it at 50 and ran nothing; it suggested trading bands to cut turnover
+  instead, and ran them when the reply was yes (T-0007): 0.64 after 15 bps and 0.5776 after 30 against SPY's 0.5767, the
   first trial in that program to beat SPY at both cost levels. The luck gate stopped it (a Deflated Sharpe of 0.80
   against 0.95), and $1M in it became $2.02M while the same $1M in SPY became $2.04M.
 
