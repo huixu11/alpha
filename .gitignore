@@ -1,0 +1,9 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# market data is licensed, so it never goes into the repository
+build/
+runs/
+scratch/

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honest Alpha</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #151b23; --line: #2a3340; --text: #e6edf3; --muted: #8b949e;
+    --spy: #8b949e; --need: #f0b429; --luck: #6e7681; --costs: #6e7681; --lucky: #f0b429;
+    --holdout: #f85149; --cand: #3fb950; --run: #58a6ff; --bad: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .mono, td.num, .stat b, .hash { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  header { display: flex; align-items: center; gap: 18px; padding: 16px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
+  header .tag { color: var(--muted); }
+  header select { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); font-size: 12px; }
+  .chip.on { color: var(--text); border-color: #3d4a5c; }
+  .chip.on::before { content: "\25CF "; color: var(--cand); }
+  .chip.phase { color: var(--run); border-color: var(--run); }
+  main { padding: 18px 24px 40px; display: grid; gap: 16px; }
+  .row { display: grid; gap: 16px; }
+  .stats { grid-template-columns: repeat(5, 1fr); }
+  .two { grid-template-columns: 2fr 1fr; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  .stat b { display: block; font-size: 28px; font-weight: 600; margin-top: 2px; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  svg text { fill: var(--muted); font-size: 11px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .funnel .bar { margin: 10px 0; }
+  .funnel .lbl { display: flex; justify-content: space-between; font-size: 13px; }
+  .funnel .track { height: 22px; background: #0f141a; border-radius: 5px; overflow: hidden; margin-top: 4px; }
+  .funnel .fill { height: 100%; border-radius: 5px; transition: width .6s; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; background: #10161d; }
+  .tile b { font-size: 13px; }
+  .tile .st { float: right; font-size: 11px; text-transform: uppercase; }
+  .tile.running, .tile.starting { border-color: var(--run); animation: pulse 1.2s infinite; }
+  .tile.done { border-color: #2f5f3a; } .tile.failed { border-color: var(--bad); }
+  .tile .sub { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(88,166,255,.25); } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--line); padding: 6px 8px; position: sticky; top: 0; background: var(--panel); }
+  td { border-bottom: 1px solid #1d242d; padding: 6px 8px; vertical-align: top; }
+  td.num { text-align: right; white-space: nowrap; }
+  .scroll { max-height: 520px; overflow: auto; }
+  .hyp { color: var(--muted); font-size: 12px; }
+  .why { font-size: 12px; }
+  .stop-costs { color: var(--muted); } .stop-luck { color: var(--lucky); } .stop-holdout { color: var(--holdout); } .stop-cand { color: var(--cand); }
+  .ev { border-left: 3px solid var(--line); padding: 4px 10px; margin: 8px 0; font-size: 13px; }
+  .ev.refusal { border-color: var(--bad); } .ev.look { border-color: var(--need); } .ev.candidate { border-color: var(--cand); } .ev.tip { border-color: #a371f7; }
+  .flag { display: inline-block; background: rgba(248,81,73,.15); color: #ff7b72; border-radius: 4px; padding: 0 6px; margin: 2px 4px 0 0; font-size: 12px; }
+  .report { white-space: pre-wrap; font-size: 14px; }
+  .report .cite { color: var(--run); }
+  .report .unsup { background: rgba(248,81,73,.25); border-radius: 3px; }
+  .badge { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; margin-bottom: 8px; }
+  .badge.ok { background: rgba(63,185,80,.15); color: var(--cand); } .badge.no { background: rgba(248,81,73,.15); color: #ff7b72; }
+  .log { font-size: 12px; color: var(--muted); max-height: 180px; overflow: auto; }
+  .log div { padding: 1px 0; }
+  .muted { color: var(--muted); }
+  footer { color: var(--muted); font-size: 12px; padding: 0 24px 24px; }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Honest Alpha</h1>
+  <span class="tag">an AI quant researcher that can't fool itself</span>
+  <select id="program"></select>
+  <div class="chips" id="chips"></div>
+</header>
+<main>
+  <section class="row stats" id="stats"></section>
+  <section class="row two">
+    <div class="card">
+      <h2>Every trial, in the order it was tried: Sharpe after costs</h2>
+      <svg id="chart" viewBox="0 0 760 300" width="100%"></svg>
+      <div class="legend">
+        <span><i style="background:var(--costs)"></i>lost to SPY after costs</span>
+        <span><i style="background:var(--lucky)"></i>beat SPY, but consistent with luck</span>
+        <span><i style="background:var(--holdout)"></i>failed the locked holdout</span>
+        <span><i style="background:var(--cand)"></i>candidate</span>
+        <span class="muted">bar: Sharpe at 5 bps (top) to 30 bps (bottom); dot: 15 bps</span>
+      </div>
+    </div>
+    <div class="card funnel"><h2>The gate</h2><div id="funnel"></div><div id="bars" class="muted" style="font-size:12px;margin-top:12px"></div></div>
+  </section>
+  <section class="card"><h2 id="tiles-title">Sandboxes</h2><div class="tiles" id="tiles"></div></section>
+  <section class="row two">
+    <div class="card"><h2>The ledger: every trial counts</h2><div class="scroll"><table id="ledger"></table></div></div>
+    <div style="display:grid; gap:16px; align-content:start">
+      <div class="card"><h2>Holdout, refusals and outside input</h2><div id="events"></div></div>
+      <div class="card"><h2>Research note</h2><div id="report" class="muted">not written yet</div></div>
+    </div>
+  </section>
+  <section class="card"><h2>Log</h2><div class="log" id="log"></div></section>
+</main>
+<footer id="footer"></footer>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const f2 = (x) => (x == null || isNaN(x) ? "–" : Number(x).toFixed(2));
+const pct = (x) => (x == null ? "–" : (x * 100).toFixed(1) + "%");
+const color = (t) => t.candidate ? "var(--cand)" : t.stopped_at === "holdout" ? "var(--holdout)" : t.stopped_at === "luck" ? "var(--lucky)" : "var(--costs)";
+let program = new URLSearchParams(location.search).get("program");
+
+async function loadPrograms() {
+  const list = await (await fetch("/api/programs")).json();
+  if (!program && list.length) program = list[0];
+  $("program").innerHTML = list.map((p) => `<option ${p === program ? "selected" : ""}>${esc(p)}</option>`).join("");
+}
+$("program").onchange = (e) => { program = e.target.value; history.replaceState(null, "", "?program=" + program); tick(); };
+
+function chips(s) {
+  const L = s.live || {};
+  const c = [
+    [`phase: ${L.phase || "idle"}${L.round ? " · round " + L.round : ""}`, "phase"],
+    [`sandboxes: ${L.executor === "daytona" ? "Daytona" : L.executor || "–"}`, L.executor === "daytona" ? "on" : ""],
+    [`model: ${L.model || "–"}`, L.model ? "on" : ""],
+    [`memory: ${L.memory ? "SurrealDB" : "off"}`, L.memory ? "on" : ""],
+    [`tracing: ${L.tracing ? "Arize" : "off"}`, L.tracing ? "on" : ""],
+    [`ledger: ${s.intact ? "chain intact" : "BROKEN"}`, s.intact ? "on" : ""],
+  ];
+  $("chips").innerHTML = c.map(([t, k]) => `<span class="chip ${k}">${esc(t)}</span>`).join("");
+}
+
+function stats(ev) {
+  const f = ev.funnel, spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
+  const cards = [
+    [`${ev.n_trials}<span class="muted" style="font-size:16px"> / ${ev.budget}</span>`, "trials spent (each raises the bar)"],
+    [f2(spy), `SPY's Sharpe after ${ev.rules.cost_bps} bps, same window`],
+    [f2(ev.needed_sharpe), `Sharpe needed to pass the luck gate at N = ${ev.n}`],
+    [`${ev.looks_left}<span class="muted" style="font-size:16px"> / ${ev.rules.holdout_looks}</span>`, "holdout looks left"],
+    [`<span style="color:${f.holdout_passed ? "var(--cand)" : "var(--text)"}">${f.holdout_passed}</span>`, "candidates (tracked, never traded)"],
+  ];
+  $("stats").innerHTML = cards.map(([b, s]) => `<div class="card stat"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
+}
+
+function chart(ev) {
+  const W = 760, H = 300, L = 44, R = 70, T = 14, B = 26;
+  const ts = ev.trials, n = Math.max(ts.length, 10);
+  const vals = ts.flatMap((t) => [t.sharpe["5"], t.sharpe["30"]]).concat([ev.spy.sharpe["15"], ev.needed_sharpe, 0]);
+  (ev.bar_series || []).forEach((b) => vals.push(b.needed));
+  let lo = Math.min(...vals) - 0.1, hi = Math.max(...vals) + 0.1;
+  lo = Math.floor(lo * 4) / 4; hi = Math.ceil(hi * 4) / 4;
+  const x = (i) => L + (i + 0.5) * (W - L - R) / n, y = (v) => T + (hi - v) * (H - T - B) / (hi - lo);
+  let g = "";
+  for (let v = lo; v <= hi + 1e-9; v += 0.25) {
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#1f2730"/>`;
+    g += `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(2)}</text>`;
+  }
+  const spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
+  g += `<line x1="${L}" x2="${W - R}" y1="${y(spy)}" y2="${y(spy)}" stroke="var(--spy)" stroke-width="1.5"/>`;
+  g += `<text x="${W - R + 4}" y="${y(spy) + 4}" style="fill:var(--spy)">SPY ${f2(spy)}</text>`;
+  const bs = ev.bar_series || [];
+  if (bs.length) {
+    let p = `M ${L} ${y(bs[0].needed)}`;
+    bs.forEach((b, i) => { p += ` L ${x(i) - (W - L - R) / n / 2} ${y(b.needed)} L ${x(i) + (W - L - R) / n / 2} ${y(b.needed)}`; });
+    g += `<path d="${p}" fill="none" stroke="var(--need)" stroke-width="2" stroke-dasharray="6 4"/>`;
+    g += `<text x="${W - R + 4}" y="${y(bs[bs.length - 1].needed) + 4}" style="fill:var(--need)">needed ${f2(bs[bs.length - 1].needed)}</text>`;
+  }
+  ts.forEach((t, i) => {
+    const c = color(t), tip = `${t.trial} ${t.short}\nSharpe 5/15/30: ${f2(t.sharpe["5"])} / ${f2(t.sharpe["15"])} / ${f2(t.sharpe["30"])}\n${t.why}`;
+    g += `<g><title>${esc(tip)}</title><line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["5"])}" y2="${y(t.sharpe["30"])}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
+    g += `<circle cx="${x(i)}" cy="${y(t.sharpe["15"])}" r="4.5" fill="${c}"/></g>`;
+  });
+  g += `<text x="${L}" y="${H - 6}">trial 1</text><text x="${W - R}" y="${H - 6}" text-anchor="end">trial ${n}</text>`;
+  $("chart").innerHTML = g;
+}
+
+function funnel(ev) {
+  const f = ev.funnel, top = Math.max(f.trials, 1);
+  const rows = [
+    ["Trials run", f.trials, "var(--run)"],
+    [`Beat SPY after ${ev.rules.cost_bps} and ${ev.rules.stress_bps} bps`, f.beat_spy_after_costs, "var(--lucky)"],
+    [`Deflated Sharpe ≥ ${ev.rules.dsr_min} (not luck)`, f.not_luck, "var(--need)"],
+    ["Passed the locked holdout", f.holdout_passed, "var(--cand)"],
+  ];
+  $("funnel").innerHTML = rows.map(([l, v, c]) => `<div class="bar"><div class="lbl"><span>${esc(l)}</span><b class="mono">${v}</b></div>
+    <div class="track"><div class="fill" style="width:${Math.max(v ? 3 : 0, 100 * v / top)}%;background:${c}"></div></div></div>`).join("");
+  $("bars").innerHTML = `Luck bar at N = ${ev.n}: Sharpe ${f2(ev.luck_bar_sharpe)} is what the best of ${ev.n} worthless tries reaches by chance. ` +
+    `Rules registered before the first trial, sha256 <span class="hash">${esc(ev.rules_sha256.slice(0, 16))}…</span>`;
+}
+
+function tiles(s) {
+  const T = (s.live && s.live.tiles) || {}, ids = Object.keys(T).sort().reverse().slice(0, 18);
+  const short = {};
+  (s.evaluation ? s.evaluation.trials : []).forEach((t) => (short[t.trial] = t.short));
+  const running = ids.filter((i) => ["running", "starting"].includes(T[i].state)).length;
+  $("tiles-title").textContent = `Sandboxes${s.live && s.live.executor === "daytona" ? " (Daytona, one per trial, network blocked, search data only)" : ""}` + (running ? ` · ${running} running` : "");
+  $("tiles").innerHTML = ids.map((i) => { const t = T[i];
+    return `<div class="tile ${esc(t.state)}"><b class="mono">${esc(i)}</b><span class="st">${esc(t.state)}</span>
+      <div class="sub">${esc(short[i] || "")}</div><div class="sub mono">${esc((t.where || "").slice(0, 13))} ${t.seconds ? t.seconds + "s" : ""}</div>
+      ${t.error ? `<div class="sub" style="color:var(--bad)">${esc(t.error)}</div>` : ""}</div>`; }).join("") || `<span class="muted">no trial has run yet</span>`;
+}
+
+function ledgerTable(ev) {
+  const rows = ev.trials.slice().reverse().map((t) => {
+    const cls = t.candidate ? "stop-cand" : "stop-" + t.stopped_at;
+    return `<tr><td class="mono">${esc(t.trial)}</td><td>${esc(t.short)}<div class="hyp">${esc(t.rationale)}</div></td>
+      <td class="num">${f2(t.sharpe["5"])}<br>${f2(t.sharpe["15"])}<br>${f2(t.sharpe["30"])}</td>
+      <td class="num">${f2(t.dsr)}</td><td class="why ${cls}">${esc(t.why)}</td></tr>`; }).join("");
+  $("ledger").innerHTML = `<tr><th>Trial</th><th>Idea and hypothesis</th><th style="text-align:right">Sharpe<br>5 / 15 / 30 bps</th><th style="text-align:right">Deflated<br>Sharpe</th><th>Gate</th></tr>` + rows;
+}
+
+function events(s) {
+  const out = [];
+  (s.events || []).forEach((e) => {
+    if (e.kind === "note" && e.tip) out.push(`<div class="ev tip"><b>Outside tip</b>, treated as data<div class="hyp">${esc(e.tip.slice(0, 280))}${e.tip.length > 280 ? "…" : ""}</div>${(e.flagged || []).map((x) => `<span class="flag">instruction ignored: ${esc(x)}</span>`).join("")}</div>`);
+    else if (e.kind === "look") out.push(`<div class="ev look"><b class="mono">${esc(e.trial)}</b> opened the holdout: ${esc(e.verdict.why)} <span class="${e.verdict.passed ? "stop-cand" : "stop-holdout"}">${e.verdict.passed ? "passed" : "failed"}</span></div>`);
+    else if (e.kind === "refusal") out.push(`<div class="ev refusal"><b>Refused</b> ${esc(e.request || "")} ${esc(e.trial || "")}: ${esc(e.why)}</div>`);
+    else if (e.kind === "candidate") out.push(`<div class="ev candidate"><b class="mono">${esc(e.trial)}</b> registered as a candidate, sha256 <span class="hash">${esc((e.sha256 || "").slice(0, 16))}…</span></div>`);
+    else if (e.kind === "note" && e.holdout_skipped) out.push(`<div class="ev">Holdout stays locked: ${esc(e.holdout_skipped)}</div>`);
+    else if (e.kind === "rejected") out.push(`<div class="ev refusal">Proposal refused before running: ${esc(e.why)}</div>`);
+  });
+  $("events").innerHTML = out.slice(-14).reverse().join("") || `<span class="muted">nothing yet</span>`;
+}
+
+function reportView(s) {
+  const r = s.report;
+  if (!r) { $("report").innerHTML = `<span class="muted">not written yet</span>`; return; }
+  const g = r.grounding || {};
+  let html = esc(r.text).replace(/\[(T-\d{4})\]/g, `<span class="cite">[$1]</span>`);
+  (g.unsupported || []).forEach((n) => { html = html.split(esc(n)).join(`<span class="unsup">${esc(n)}</span>`); });
+  $("report").innerHTML = `<span class="badge ${g.grounded ? "ok" : "no"}">${g.grounded ? `grounded: all ${g.numbers} numbers trace to the ledger` : `${(g.unsupported || []).length} numbers not in the ledger`}</span><div class="report">${html}</div>`;
+}
+
+async function tick() {
+  if (!program) { await loadPrograms(); if (!program) return; }
+  let s;
+  try { s = await (await fetch("/api/state?program=" + encodeURIComponent(program))).json(); } catch (e) { return; }
+  chips(s);
+  if (!s.intact) { $("stats").innerHTML = `<div class="card" style="color:var(--bad)">${esc(s.error)}</div>`; return; }
+  tiles(s);
+  $("log").innerHTML = ((s.live && s.live.log) || []).slice().reverse().map((l) => `<div><span class="mono">${esc(l.at.slice(11, 19))}</span> ${esc(l.text)}</div>`).join("");
+  if (!s.evaluation) return;
+  stats(s.evaluation); chart(s.evaluation); funnel(s.evaluation); ledgerTable(s.evaluation); events(s); reportView(s);
+  $("footer").innerHTML = `Ledger: ${s.ledger.entries} entries, hash chain head <span class="hash">${esc(s.ledger.head.slice(0, 16))}…</span>. Every verdict on this page is recomputed from the ledger by the gate's code.`;
+}
+loadPrograms().then(tick);
+setInterval(tick, 1500);
+setInterval(loadPrograms, 15000);
+</script>
+</body>
+</html>
