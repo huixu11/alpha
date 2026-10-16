@@ -62,11 +62,13 @@ researcher's instructions changed:
   beat SPY after costs. The best, three parts SPY to one part SPY timing, reached 0.574 against SPY's 0.578; every
   sleeve added to SPY lowered the Sharpe. Its own note: *"stacking is unlikely to win."* The holdout stayed locked.
   Two sandboxes timed out while starting and were not counted as trials.
-- **The books researcher** tested published strategies as their authors wrote them, in 6 trials: Faber's 10-month
-  moving average on SPY reached a Sharpe of 0.33 after costs, Antonacci's 12-month absolute momentum 0.31,
+- **The books researcher** tested published strategies as closely as the space allows, in 6 trials: Faber's
+  10-month moving average on SPY reached a Sharpe of 0.33 after costs, Antonacci's 12-month absolute momentum 0.31,
   Jegadeesh and Titman's 12-1 momentum 0.22, and momentum only in up markets -0.01. Blitz and van Vliet's
-  low-volatility stocks, a family added for this run, came closest: 50 names reached 0.62 after 15 bps against
-  SPY's 0.58, but 0.55 after 30 bps.
+  low-volatility stocks, a family added for this run, came closest: set to buy 50 names, it reached 0.62 after
+  15 bps against SPY's 0.58, but 0.55 after 30 bps. The space differs from the books in three ways: SPY timing
+  keeps a volatility cap (0.40 at its loosest), volatility is measured over at most 12 months where the paper used
+  36, and the engine skips any weight under 2%, so the 50-name book held about 25.
 - **Then the desk, where a person talks to the researcher.** Asked in Chinese to hold that low-volatility book with
   100 names, Claude answered that the space caps it at 50 and ran nothing; it suggested trading bands to cut turnover
   instead, and ran them when the reply was yes (T-0007): 0.64 after 15 bps and 0.5776 after 30 against SPY's 0.5767, the
@@ -75,9 +77,12 @@ researcher's instructions changed:
 
 No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 
-One limit: each ledger counts only its own trials and looks. The 28 blends were judged as if the 68 earlier trials
+Two limits. Each ledger counts only its own trials and looks: the 28 blends were judged as if the 68 earlier trials
 on the same data had not happened, and a new program gets three fresh holdout looks. Across all four programs the
-holdout has been opened once.
+holdout has been opened once. And checks run while building the system are in no ledger: when the low-volatility
+family was added, three smoke tests ran on the search window, and its default (20 names) reached 0.66 after 15 bps
+and 0.64 after 30 there, a setting no researcher has tried. Trying it now, because of that, would be a fork in the
+path that no ledger counts.
 
 ## The desk
 
