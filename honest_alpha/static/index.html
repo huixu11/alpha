@@ -146,6 +146,16 @@
   .r-foot { font-size: 12px; color: var(--muted); } .r-foot b { color: var(--text); font-family: "JetBrains Mono", monospace; }
   .r-stop { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--amber); }
 
+  .progs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .prog { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: var(--panel); cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .15s; }
+  .prog:hover { transform: translateY(-1px); border-color: rgba(34,211,238,.5); }
+  .prog.sel { border-color: var(--cyan); box-shadow: 0 0 22px rgba(34,211,238,.22), inset 0 0 18px rgba(34,211,238,.06); }
+  .prog.bad { border-color: rgba(251,113,133,.6); } .prog.bad .p-top b { color: var(--red); } .prog.bad .p-bad { color: #fda4af; font-size: 12px; }
+  .p-top { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; } .p-top b { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+  .p-nums { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); } .p-nums b { color: var(--text); font-family: "JetBrains Mono", monospace; }
+  .p-look { font-size: 12px; color: var(--red); margin-top: 3px; }
+  .pill.live { color: var(--cyan); border-color: var(--cyan); animation: blink 1.2s steps(2) infinite; }
+  .luckc { color: var(--amber) !important; }
   .broken { grid-column: 1 / -1; border: 2px solid var(--bad); border-radius: 14px; padding: 20px 24px; background: rgba(251,113,133,.08); box-shadow: 0 0 40px rgba(251,113,133,.25); }
   .broken h2 { color: var(--bad); font-size: 24px; margin: 0 0 6px; text-transform: none; letter-spacing: 0; }
   main.is-broken .needs-ev { display: none; }
@@ -200,6 +210,7 @@
   <div class="chips" id="chips"></div>
 </header>
 <main id="main">
+  <section><div class="kicker" style="color:var(--cyan)">Same model, same data, same gate · one researcher per run</div><div class="progs" id="progs"></div></section>
   <section class="money needs-ev" id="money"></section>
   <section class="row stats" id="stats"></section>
   <section class="row hero needs-ev">
@@ -264,6 +275,14 @@ const color = (t) => ({cand: "var(--cand)", hold: "var(--holdout)", luck: "var(-
 const usd = (v) => (v < 0 ? "−" : "") + (Math.abs(v) >= 1e6 ? "$" + (Math.abs(v) / 1e6).toFixed(2) + "M" : "$" + Math.round(Math.abs(v) / 1e3) + "k");
 const mi = (m) => { const [y, mo] = String(m).split("-").map(Number); return y * 12 + mo - 1; };
 const last = (c) => c[c.length - 1][1];
+const SLEEVE = {w_spy: "SPY", w_regime_spy: "SPY timing", w_regime_stocks: "timed momentum", w_stocks_only: "momentum", w_pair_rule: "pair"};
+const pretty = (short) => {
+  short = String(short || "");
+  if (!short.startsWith("blend")) return short;
+  const w = Object.fromEntries(Object.keys(SLEEVE).map((k) => [k, 1])), rest = [];
+  short.slice(5).trim().split(/\s+/).forEach((kv) => { const [k, v] = kv.split("="); if (k in w) w[k] = Number(v); else if (v !== undefined) rest.push(kv); });
+  return "blend " + Object.entries(w).filter(([, v]) => v > 0).map(([k, v]) => `${v}×${SLEEVE[k]}`).join(" + ") + (rest.length ? " · " + rest.join(" ") : "");
+};
 let program = new URLSearchParams(location.search).get("program");
 let S = null, replay = null, heroKey = "", moneyKey = "", HL = null;
 
@@ -272,7 +291,7 @@ async function loadPrograms() {
   if (!program && list.length) program = list[0];
   $("program").innerHTML = list.map((p) => `<option ${p === program ? "selected" : ""}>${esc(p)}</option>`).join("");
 }
-$("program").onchange = (e) => { program = e.target.value; replay = null; history.replaceState(null, "", "?program=" + program); tick(); };
+$("program").onchange = (e) => { program = e.target.value; replay = null; history.replaceState(null, "", "?program=" + program); progs(); tick(); };
 
 function chips(s) {
   const L = s.live || {};
@@ -506,7 +525,7 @@ function funnel(ev) {
 function tiles(s) {
   const T = (s.live && s.live.tiles) || {}, ids = Object.keys(T).sort().reverse().slice(0, 18);
   const short = {};
-  (s.evaluation ? s.evaluation.trials : []).forEach((t) => (short[t.trial] = t.short));
+  (s.evaluation ? s.evaluation.trials : []).forEach((t) => (short[t.trial] = pretty(t.short)));
   const running = ids.filter((i) => ["running", "starting"].includes(T[i].state)).length;
   $("tiles-title").textContent = `Sandboxes${s.live && s.live.executor === "daytona" ? " (Daytona, one per trial, network blocked, search data only)" : ""}` + (running ? ` · ${running} running` : "");
   $("tiles").innerHTML = ids.map((i) => { const t = T[i];
@@ -518,7 +537,7 @@ function tiles(s) {
 function ledgerTable(ev) {
   const rows = ev.trials.slice().reverse().map((t) => {
     const cls = t.candidate ? "stop-cand" : "stop-" + t.stopped_at;
-    return `<tr data-t="${esc(t.trial)}"><td class="mono">${esc(t.trial)}</td><td>${esc(t.short)}<div class="hyp">${esc(t.rationale)}</div></td>
+    return `<tr data-t="${esc(t.trial)}"><td class="mono">${esc(t.trial)}</td><td>${esc(pretty(t.short))}<div class="hyp">${esc(t.rationale)}</div></td>
       <td class="num">${f2(t.sharpe["5"])}<br>${f2(t.sharpe["15"])}<br>${f2(t.sharpe["30"])}</td>
       <td class="num">${f2(t.dsr)}</td><td class="why ${cls}">${esc(t.why)}</td></tr>`; }).join("");
   $("ledger").innerHTML = `<tr><th>Trial</th><th>Idea and hypothesis</th><th style="text-align:right">Sharpe<br>5 / 15 / 30 bps</th><th style="text-align:right">Deflated<br>Sharpe</th><th>Gate</th></tr>` + rows;
@@ -621,7 +640,7 @@ function showTip(id, e) {
   const ev = S && S.evaluation, t = ev && ev.trials.find((x) => x.trial === id), tip = $("tip");
   if (!t) { tip.style.display = "none"; return; }
   const h = t.holdout ? `<div style="margin-top:6px;color:${t.holdout.passed ? "var(--cand)" : "var(--holdout)"}">holdout: ${esc(t.holdout.why)}</div>` : "";
-  tip.innerHTML = `<b class="mono">${esc(t.trial)}</b> <span class="muted">${esc(t.short)}</span>
+  tip.innerHTML = `<b class="mono">${esc(t.trial)}</b> <span class="muted">${esc(pretty(t.short))}</span>
     <div style="margin:4px 0" class="mono">Sharpe 5 / 15 / 30 bps: ${f2(t.sharpe["5"])} / ${f2(t.sharpe["15"])} / ${f2(t.sharpe["30"])} · DSR ${f2(t.dsr)}</div>
     <div class="hyp">Claude's hypothesis: ${esc(t.rationale)}</div><div style="margin-top:6px" class="stop-${t.candidate ? "cand" : t.stopped_at}">${esc(t.why)}</div>${h}`;
   tip.style.display = "block";
@@ -635,14 +654,41 @@ document.addEventListener("mousemove", (e) => {
   if (id) showTip(id, e); else $("tip").style.display = "none";
 });
 
+let PROGS = {};
+async function loadAll() {
+  const list = await (await fetch("/api/programs")).json(), out = {};
+  await Promise.all(list.map(async (p) => { try { out[p] = await (await fetch("/api/state?program=" + encodeURIComponent(p))).json(); } catch (e) { /* skip */ } }));
+  PROGS = out;
+  progs();
+}
+function progs() {
+  const rank = (p) => { const s = PROGS[p]; return !s.intact ? 9 : ({careful: 0, eager: 1, stack: 2}[(s.live || {}).style] ?? 5); };
+  $("progs").innerHTML = Object.keys(PROGS).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map((p) => {
+    const s = PROGS[p], ev = s.evaluation, L = s.live || {}, sel = p === program ? " sel" : "";
+    if (!s.intact) return `<div class="prog bad${sel}" data-p="${esc(p)}"><div class="p-top"><b>${esc(p)}</b><span class="pill">a copy with one trial's Sharpe edited</span></div><div class="p-bad">hash chain broken: the gate refuses to judge it</div></div>`;
+    if (!ev || !ev.trials.length) return `<div class="prog${sel}" data-p="${esc(p)}"><div class="p-top"><b>${esc(p)}</b><span class="pill">${esc(L.style || "")}</span><span class="pill live">live</span></div><div class="p-nums">starting</div></div>`;
+    const best = Math.max(...ev.trials.map((t) => t.sharpe["15"])), spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
+    const look = Object.entries(s.looks || {})[0];
+    return `<div class="prog${sel}" data-p="${esc(p)}"><div class="p-top"><b>${esc(p)}</b><span class="pill">researcher: ${esc(L.style || "–")}</span>${L.phase && L.phase !== "done" ? `<span class="pill live">live</span>` : ""}</div>
+      <div class="p-nums"><span><b>${ev.n_trials}</b> tries</span><span>best <b class="${best > spy ? "luckc" : ""}">${f2(best)}</b> vs SPY ${f2(spy)}</span><span><b>${ev.funnel.beat_spy_after_costs}</b> beat SPY</span><span><b class="${ev.funnel.holdout_passed ? "pos" : ""}">${ev.funnel.holdout_passed}</b> passed</span></div>
+      ${look ? `<div class="p-look">${esc(look[0])} on the locked holdout: ${f2(look[1].verdict.sharpe)} vs SPY ${f2(look[1].verdict.spy_sharpe)}</div>` : ""}</div>`;
+  }).join("");
+}
+document.addEventListener("click", (e) => {
+  const el = e.target.closest && e.target.closest(".prog[data-p]");
+  if (!el) return;
+  program = el.dataset.p; replay = null; history.replaceState(null, "", "?program=" + program); $("program").value = program; progs(); tick();
+});
+
 async function tick() {
   if (!program) { await loadPrograms(); if (!program) return; }
   try { S = await (await fetch("/api/state?program=" + encodeURIComponent(program))).json(); } catch (e) { return; }
   render();
 }
-loadPrograms().then(tick);
+loadPrograms().then(tick).then(loadAll);
 setInterval(tick, 1500);
 setInterval(loadPrograms, 15000);
+setInterval(loadAll, 8000);
 </script>
 </body>
 </html>
