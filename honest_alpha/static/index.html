@@ -4,121 +4,275 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Honest Alpha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117; --panel: #151b23; --line: #2a3340; --text: #e6edf3; --muted: #8b949e;
-    --spy: #8b949e; --need: #f0b429; --luck: #6e7681; --costs: #6e7681; --lucky: #f0b429;
-    --holdout: #f85149; --cand: #3fb950; --run: #58a6ff; --bad: #f85149;
+    --bg: #05070d; --panel: rgba(14, 20, 34, .78); --panel2: rgba(22, 30, 48, .92); --line: rgba(130, 150, 200, .14);
+    --text: #e8edf7; --muted: #8590a8; --cyan: #22d3ee; --violet: #a78bfa; --amber: #fbbf24; --red: #fb7185; --green: #34d399; --blue: #60a5fa;
+    --spy: #f1f5f9; --need: #fbbf24; --luck: #64748b; --costs: #64748b; --lucky: #fbbf24; --holdout: #fb7185; --cand: #34d399; --run: #60a5fa; --bad: #fb7185;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .mono, td.num, .stat b, .hash { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
-  header { display: flex; align-items: center; gap: 18px; padding: 16px 24px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  header h1 { margin: 0; font-size: 22px; letter-spacing: .2px; }
-  header .tag { color: var(--muted); }
-  header select { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  body { margin: 0; color: var(--text); font: 14px/1.5 Inter, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh;
+    background: radial-gradient(1100px 520px at 8% -8%, rgba(34,211,238,.13), transparent 60%),
+                radial-gradient(900px 520px at 92% -4%, rgba(167,139,250,.16), transparent 60%),
+                radial-gradient(900px 700px at 50% 115%, rgba(251,113,133,.07), transparent 60%), var(--bg);
+    background-attachment: fixed; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 25%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 0%, #000 25%, transparent 75%); }
+  .mono, td.num, .stat b, .hash { font-family: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 20px; padding: 14px 28px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(5,7,13,.92), rgba(5,7,13,.6)); backdrop-filter: blur(12px); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-weight: 800; font-size: 21px; color: #05070d;
+    background: linear-gradient(135deg, var(--cyan), var(--violet)); box-shadow: 0 0 24px rgba(34,211,238,.45), 0 0 52px rgba(167,139,250,.25); }
+  header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.3px; line-height: 1.1;
+    background: linear-gradient(90deg, #fff, var(--cyan) 55%, var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header .tag { color: var(--muted); font-size: 12.5px; }
+  header select { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; font-weight: 600; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
-  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); font-size: 12px; }
-  .chip.on { color: var(--text); border-color: #3d4a5c; }
-  .chip.on::before { content: "\25CF "; color: var(--cand); }
-  .chip.phase { color: var(--run); border-color: var(--run); }
-  .chip.bad { color: var(--bad); border-color: var(--bad); font-weight: 600; }
-  .broken { grid-column: 1 / -1; border: 2px solid var(--bad); border-radius: 10px; padding: 18px 22px; background: rgba(248, 81, 73, .08); }
-  .broken h2 { color: var(--bad); font-size: 22px; margin: 0 0 6px; text-transform: none; letter-spacing: 0; }
-  main { padding: 18px 24px 40px; display: grid; gap: 16px; }
-  .row { display: grid; gap: 16px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; color: var(--muted); font-size: 12px; background: rgba(255,255,255,.02); }
+  .chip.on { color: var(--text); border-color: rgba(52,211,153,.3); }
+  .chip.on::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 7px; vertical-align: 1px; box-shadow: 0 0 8px var(--green); }
+  .chip.phase { color: var(--cyan); border-color: rgba(34,211,238,.5); box-shadow: inset 0 0 14px rgba(34,211,238,.15); }
+  .chip.bad { color: var(--bad); border-color: var(--bad); font-weight: 700; box-shadow: 0 0 16px rgba(251,113,133,.35); }
+  main { position: relative; padding: 20px 28px 40px; display: grid; gap: 18px; }
+  .row { display: grid; gap: 18px; }
   .stats { grid-template-columns: repeat(5, 1fr); }
   .two { grid-template-columns: 2fr 1fr; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
-  .card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-  .stat b { display: block; font-size: 28px; font-weight: 600; margin-top: 2px; }
+  .hero { grid-template-columns: 3fr 1fr; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; backdrop-filter: blur(8px);
+    box-shadow: 0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04); }
+  .card h2 { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .card h2 em { font-style: normal; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 13px; }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .card-head h2 { margin: 0; }
+  .card-head .sp { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  button.play { font: inherit; font-weight: 700; font-size: 13px; color: #05070d; border: 0; border-radius: 999px; padding: 7px 16px; cursor: pointer;
+    background: linear-gradient(90deg, var(--cyan), var(--violet)); box-shadow: 0 0 20px rgba(34,211,238,.35); transition: transform .15s, box-shadow .15s; }
+  button.play:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(167,139,250,.55); }
+  button.play.on { background: linear-gradient(90deg, var(--red), var(--amber)); }
+  #replay-label { font-size: 12px; color: var(--muted); }
+  #replay-label b { color: var(--cyan); }
+
+  .money { position: relative; display: grid; grid-template-columns: 1.5fr auto auto; gap: 26px; align-items: center; padding: 20px 24px; border-radius: 16px;
+    border: 1px solid transparent; background: linear-gradient(var(--panel2), var(--panel2)) padding-box,
+      linear-gradient(110deg, rgba(34,211,238,.7), rgba(167,139,250,.5) 45%, rgba(251,113,133,.8)) border-box;
+    box-shadow: 0 0 60px rgba(167,139,250,.12), 0 10px 40px rgba(0,0,0,.4); overflow: hidden; }
+  .money::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.05) 50%, transparent 70%);
+    transform: translateX(-100%); animation: sheen 5s ease-in-out infinite; }
+  @keyframes sheen { 60%, 100% { transform: translateX(100%); } }
+  .money:empty { display: none; }
+  .kicker { font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .m-head { font-size: 19px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; }
+  .m-head b { font-weight: 800; }
+  .neg { color: var(--red); text-shadow: 0 0 18px rgba(251,113,133,.45); }
+  .pos { color: var(--green); text-shadow: 0 0 18px rgba(52,211,153,.5); }
+  .m-nums { display: flex; gap: 26px; }
+  .m-num span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
+  .m-num b { font-family: "JetBrains Mono", monospace; font-size: 30px; font-weight: 700; white-space: nowrap; }
+  .m-num.big b { font-size: 40px; }
+  .spark { width: 260px; height: 84px; }
+  .spark path { fill: none; stroke-width: 2.2; }
+  .s-spy { stroke: var(--spy); filter: drop-shadow(0 0 4px rgba(241,245,249,.6)); } .s-bad { stroke: var(--red); filter: drop-shadow(0 0 5px var(--red)); }
+  .spark text { font: 700 11px "JetBrains Mono", monospace; } .t-spy { fill: var(--spy); } .t-bad { fill: var(--red); }
+
+  svg text { fill: var(--muted); font-size: 11px; font-family: Inter, sans-serif; }
+  svg .grid { stroke: rgba(130,150,200,.09); } svg .grid.v { stroke-dasharray: 2 4; }
+  svg .zone { font-size: 10.5px; font-weight: 800; letter-spacing: 1.3px; fill: var(--red); } svg .zone.dim { fill: var(--muted); } svg .zone.ok { fill: var(--green); }
+  svg .divider { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 4 4; filter: drop-shadow(0 0 4px var(--red)); }
+  #cloud .tr { fill: none; stroke-width: 1.1; opacity: .26; transition: opacity .2s, stroke-width .2s; }
+  .tr.costs, .dot.costs { stroke: var(--costs); color: var(--costs); fill: var(--costs); }
+  .tr.luck, .dot.luck { stroke: var(--lucky); color: var(--lucky); fill: var(--lucky); }
+  .tr.hold, .dot.hold { stroke: var(--holdout); color: var(--holdout); fill: var(--holdout); }
+  .tr.cand, .dot.cand { stroke: var(--cand); color: var(--cand); fill: var(--cand); }
+  #cloud .tr { fill: none; }
+  #cloud .tr.star { opacity: .95; stroke-width: 2; filter: drop-shadow(0 0 5px currentColor); }
+  #cloud .tr.cont { stroke-width: 2.6; opacity: 1; }
+  #cloud .tr.cur { opacity: 1; stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .8s ease-out forwards; filter: drop-shadow(0 0 6px currentColor); }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  #cloud .spy { fill: none; stroke: var(--spy); stroke-width: 2.4; filter: drop-shadow(0 0 4px rgba(241,245,249,.55)); }
+  #cloud .hit { fill: none; stroke: transparent; stroke-width: 9; cursor: crosshair; }
+  body.dim #cloud .tr:not(.hl) { opacity: .07; }
+  body.dim #cloud .tr.hl { opacity: 1; stroke-width: 2.8; filter: drop-shadow(0 0 7px currentColor); }
+  .endlbl { font: 700 11.5px "JetBrains Mono", monospace; } .endlbl.l-spy { fill: var(--spy); } .endlbl.l-bad { fill: var(--red); } .endlbl.l-best { fill: var(--amber); }
+  .dot { stroke: none; opacity: .9; cursor: crosshair; transition: r .15s; }
+  .dot.pop { animation: pop .5s ease-out; filter: drop-shadow(0 0 6px currentColor); }
+  @keyframes pop { 0% { r: 0; } 60% { r: 7; } 100% { r: 3.9; } }
+  body.dim .dot:not(.hl) { opacity: .2; } .dot.hl { r: 6; filter: drop-shadow(0 0 6px currentColor); opacity: 1; }
+  .passzone { fill: rgba(52,211,153,.06); stroke: rgba(52,211,153,.4); stroke-dasharray: 4 4; }
+  .ln-need { stroke: var(--need); stroke-width: 2; stroke-dasharray: 6 4; filter: drop-shadow(0 0 5px var(--need)); transition: all .3s; }
+  .ln-spy { stroke: var(--spy); stroke-width: 1.6; } .ln-luck { stroke: var(--luck); stroke-width: 1.4; stroke-dasharray: 3 3; }
+  .tl-need { fill: var(--need) !important; font-weight: 700; } .tl-spy { fill: var(--spy) !important; font-weight: 700; } .tl-luck { fill: #94a3b8 !important; }
+
+  .loop { display: flex; align-items: stretch; gap: 0; margin: 6px 0 16px; }
+  .node { flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: rgba(255,255,255,.025); position: relative; }
+  .node b { display: block; font-size: 13px; } .node span { color: var(--muted); font-size: 12px; }
+  .node.mem { border-color: rgba(167,139,250,.45); box-shadow: inset 0 0 22px rgba(167,139,250,.08); } .node.mem b { color: var(--violet); }
+  .node.claude { border-color: rgba(251,191,36,.45); box-shadow: inset 0 0 22px rgba(251,191,36,.08); } .node.claude b { color: var(--amber); }
+  .node.day { border-color: rgba(96,165,250,.45); box-shadow: inset 0 0 22px rgba(96,165,250,.08); } .node.day b { color: var(--blue); }
+  .node.gate { border-color: rgba(52,211,153,.45); box-shadow: inset 0 0 22px rgba(52,211,153,.08); } .node.gate b { color: var(--green); }
+  .node .now { display: none; margin-top: 6px; font-size: 11.5px; font-weight: 700; font-style: normal; }
+  .node.live .now { display: block; } .node.live .now::after { content: "…"; animation: blink 1s steps(2) infinite; }
+  .node.mem { --glow: rgba(167,139,250,.6); } .node.claude { --glow: rgba(251,191,36,.6); } .node.day { --glow: rgba(96,165,250,.6); } .node.gate { --glow: rgba(52,211,153,.6); }
+  .node.mem .now { color: var(--violet); } .node.claude .now { color: var(--amber); } .node.day .now { color: var(--blue); } .node.gate .now { color: var(--green); }
+  .node.live { animation: nodeglow 1.2s ease-in-out infinite; }
+  @keyframes nodeglow { 50% { box-shadow: 0 0 28px var(--glow), inset 0 0 22px var(--glow); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  .flow { width: 46px; align-self: center; height: 3px; border-radius: 3px; position: relative;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent) 0 0 / 200% 100%, rgba(130,150,200,.2); animation: flow 1.4s linear infinite; }
+  .flow::after { content: ""; position: absolute; right: -2px; top: -4px; border: 5px solid transparent; border-left: 7px solid var(--cyan); }
+  .flow.back { width: 64px; } .flow.back::before { content: "next round"; position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 10px; color: var(--cyan); white-space: nowrap; }
+  @keyframes flow { from { background-position: 100% 0, 0 0; } to { background-position: -100% 0, 0 0; } }
+  .rounds { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding-bottom: 6px; scroll-behavior: smooth; }
+  .round { flex: 0 0 300px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: rgba(255,255,255,.025); animation: rise .45s ease-out; }
+  .round.cur { border-color: var(--cyan); box-shadow: 0 0 24px rgba(34,211,238,.25), inset 0 0 18px rgba(34,211,238,.06); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  .r-arrow { align-self: center; color: var(--cyan); font-size: 18px; padding: 0 8px; text-shadow: 0 0 10px var(--cyan); }
+  .r-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .r-head b { font-size: 13px; letter-spacing: .8px; text-transform: uppercase; margin-right: 4px; }
+  .pill { font-size: 11px; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); color: var(--muted); }
+  .pill.mem { color: var(--violet); border-color: rgba(167,139,250,.4); }
+  .r-lesson { font-size: 12.5px; line-height: 1.5; color: #cbd5e1; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+  .round:hover .r-lesson { -webkit-line-clamp: unset; }
+  .r-lesson .who { color: var(--amber); font-weight: 700; }
+  .r-trials { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 8px; }
+  .tp { font: 600 11px "JetBrains Mono", monospace; border-radius: 6px; padding: 1px 6px; border: 1px solid; cursor: crosshair; background: rgba(255,255,255,.02); }
+  .tp b { font-weight: 700; } .tp.costs { color: #94a3b8; border-color: rgba(100,116,139,.5); } .tp.luck { color: var(--amber); border-color: rgba(251,191,36,.5); }
+  .tp.hold { color: var(--red); border-color: rgba(251,113,133,.6); } .tp.cand { color: var(--green); border-color: rgba(52,211,153,.6); }
+  .tp.hl { box-shadow: 0 0 12px currentColor; }
+  .r-foot { font-size: 12px; color: var(--muted); } .r-foot b { color: var(--text); font-family: "JetBrains Mono", monospace; }
+  .r-stop { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--amber); }
+
+  .broken { grid-column: 1 / -1; border: 2px solid var(--bad); border-radius: 14px; padding: 20px 24px; background: rgba(251,113,133,.08); box-shadow: 0 0 40px rgba(251,113,133,.25); }
+  .broken h2 { color: var(--bad); font-size: 24px; margin: 0 0 6px; text-transform: none; letter-spacing: 0; }
+  main.is-broken .needs-ev { display: none; }
+  .stat b { display: block; font-size: 30px; font-weight: 700; margin-top: 2px; background: linear-gradient(180deg, #fff, #b8c4dc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .stat b .muted { -webkit-text-fill-color: var(--muted); }
   .stat span { color: var(--muted); font-size: 12px; }
-  svg text { fill: var(--muted); font-size: 11px; }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 6px; }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-  .funnel .bar { margin: 10px 0; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; box-shadow: 0 0 6px currentColor; }
+  .funnel .bar { margin: 12px 0; }
   .funnel .lbl { display: flex; justify-content: space-between; font-size: 13px; }
-  .funnel .track { height: 22px; background: #0f141a; border-radius: 5px; overflow: hidden; margin-top: 4px; }
-  .funnel .fill { height: 100%; border-radius: 5px; transition: width .6s; }
+  .funnel .track { height: 22px; background: rgba(255,255,255,.04); border-radius: 6px; overflow: hidden; margin-top: 5px; }
+  .funnel .fill { height: 100%; border-radius: 6px; transition: width .6s; box-shadow: 0 0 14px currentColor; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; background: #10161d; }
+  .tile { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12px; background: rgba(255,255,255,.025); }
   .tile b { font-size: 13px; }
-  .tile .st { float: right; font-size: 11px; text-transform: uppercase; }
-  .tile.running, .tile.starting { border-color: var(--run); animation: pulse 1.2s infinite; }
-  .tile.done { border-color: #2f5f3a; } .tile.failed { border-color: var(--bad); }
+  .tile .st { float: right; font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+  .tile.running, .tile.starting { border-color: var(--run); animation: pulse 1.2s infinite; } .tile.running .st, .tile.starting .st { color: var(--run); }
+  .tile.done { border-color: rgba(52,211,153,.3); } .tile.done .st { color: var(--green); } .tile.failed { border-color: var(--bad); }
   .tile .sub { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  @keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(88,166,255,.25); } }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 3px rgba(96,165,250,.25), 0 0 18px rgba(96,165,250,.35); } }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--line); padding: 6px 8px; position: sticky; top: 0; background: var(--panel); }
-  td { border-bottom: 1px solid #1d242d; padding: 6px 8px; vertical-align: top; }
+  th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 7px 8px; position: sticky; top: 0; background: #0e1424; font-size: 12px; }
+  td { border-bottom: 1px solid rgba(130,150,200,.08); padding: 7px 8px; vertical-align: top; }
+  tr[data-t] { cursor: crosshair; } tr.hl td { background: rgba(34,211,238,.07); }
   td.num { text-align: right; white-space: nowrap; }
   .scroll { max-height: 520px; overflow: auto; }
   .hyp { color: var(--muted); font-size: 12px; }
   .why { font-size: 12px; }
-  .stop-costs { color: var(--muted); } .stop-luck { color: var(--lucky); } .stop-holdout { color: var(--holdout); } .stop-cand { color: var(--cand); }
-  .ev { border-left: 3px solid var(--line); padding: 4px 10px; margin: 8px 0; font-size: 13px; }
-  .ev.refusal { border-color: var(--bad); } .ev.look { border-color: var(--need); } .ev.candidate { border-color: var(--cand); } .ev.tip { border-color: #a371f7; }
-  .flag { display: inline-block; background: rgba(248,81,73,.15); color: #ff7b72; border-radius: 4px; padding: 0 6px; margin: 2px 4px 0 0; font-size: 12px; }
+  .stop-costs { color: #94a3b8; } .stop-luck { color: var(--lucky); } .stop-holdout { color: var(--holdout); } .stop-cand { color: var(--cand); }
+  .ev { border-left: 3px solid var(--line); padding: 5px 12px; margin: 9px 0; font-size: 13px; border-radius: 0 8px 8px 0; background: rgba(255,255,255,.02); }
+  .ev.refusal { border-color: var(--bad); } .ev.look { border-color: var(--need); } .ev.candidate { border-color: var(--cand); } .ev.tip { border-color: var(--violet); }
+  .flag { display: inline-block; background: rgba(251,113,133,.15); color: #fda4af; border-radius: 4px; padding: 0 6px; margin: 2px 4px 0 0; font-size: 12px; }
   .report { white-space: pre-wrap; font-size: 14px; }
-  .report .cite { color: var(--run); }
-  .report .unsup { background: rgba(248,81,73,.25); border-radius: 3px; }
+  .report .cite { color: var(--cyan); }
+  .report .unsup { background: rgba(251,113,133,.25); border-radius: 3px; }
   .badge { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 12px; margin-bottom: 8px; }
-  .badge.ok { background: rgba(63,185,80,.15); color: var(--cand); } .badge.no { background: rgba(248,81,73,.15); color: #ff7b72; }
+  .badge.ok { background: rgba(52,211,153,.15); color: var(--cand); } .badge.no { background: rgba(251,113,133,.15); color: #fda4af; }
   .log { font-size: 12px; color: var(--muted); max-height: 180px; overflow: auto; }
   .log div { padding: 1px 0; }
   .muted { color: var(--muted); }
-  footer { color: var(--muted); font-size: 12px; padding: 0 24px 24px; }
-  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } .two { grid-template-columns: 1fr; } }
+  #tip { position: fixed; z-index: 20; pointer-events: none; max-width: 380px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; display: none;
+    background: rgba(10,14,25,.96); border: 1px solid rgba(34,211,238,.4); box-shadow: 0 0 30px rgba(34,211,238,.2), 0 10px 30px rgba(0,0,0,.5); }
+  #tip b.mono { color: var(--cyan); }
+  footer { position: relative; color: var(--muted); font-size: 12px; padding: 0 28px 28px; }
+  @media (max-width: 1200px) { .stats { grid-template-columns: repeat(2, 1fr); } .two, .hero { grid-template-columns: 1fr; } .money { grid-template-columns: 1fr; } .loop { flex-wrap: wrap; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>Honest Alpha</h1>
-  <span class="tag">an AI quant researcher that can't fool itself</span>
+  <div class="brand"><div class="logo">α</div><div><h1>Honest Alpha</h1><div class="tag">an AI quant researcher that can't fool itself</div></div></div>
   <select id="program"></select>
   <div class="chips" id="chips"></div>
 </header>
-<main>
+<main id="main">
+  <section class="money needs-ev" id="money"></section>
   <section class="row stats" id="stats"></section>
-  <section class="row two">
+  <section class="row hero needs-ev">
     <div class="card">
-      <h2>Every trial, in the order it was tried: Sharpe after costs</h2>
+      <div class="card-head"><h2>Every strategy Claude tried <em>· $1 grown after costs, then the locked holdout</em></h2>
+        <div class="sp"><span id="replay-label"></span><button class="play" id="replay">▶ Replay the hunt</button></div></div>
+      <svg id="cloud" viewBox="0 0 900 400" width="100%"></svg>
+      <div class="legend">
+        <span style="color:var(--spy)"><i style="background:var(--spy)"></i>SPY</span>
+        <span style="color:var(--costs)"><i style="background:var(--costs)"></i>lost to SPY after costs</span>
+        <span style="color:var(--lucky)"><i style="background:var(--lucky)"></i>beat SPY, but consistent with luck</span>
+        <span style="color:var(--holdout)"><i style="background:var(--holdout)"></i>failed the locked holdout</span>
+        <span style="color:var(--cand)"><i style="background:var(--cand)"></i>candidate</span>
+        <span class="muted">hover any line, dot or row to follow one trial everywhere</span>
+      </div>
+    </div>
+    <div class="card"><h2>Sharpe profile <em>· one dot per try</em></h2><svg id="profile" viewBox="0 0 300 400" width="100%"></svg>
+      <div class="legend"><span>The bar Claude must clear rises with every try. The pass zone above it stays empty.</span></div></div>
+  </section>
+  <section class="card needs-ev">
+    <div class="card-head"><h2>Claude's research loop <em>· each round reads the ledger and its memory, then proposes again</em></h2></div>
+    <div class="loop">
+      <div class="node mem"><b>Ledger + SurrealDB memory</b><span>every past trial, hash-chained; lessons recalled by meaning</span><em class="now"></em></div>
+      <div class="flow"></div>
+      <div class="node claude"><b>Claude on Bedrock</b><span>reads them and writes the next ideas as data: a family and its knobs</span><em class="now"></em></div>
+      <div class="flow"></div>
+      <div class="node day"><b>Daytona sandboxes</b><span>one per idea, network blocked, search data only</span><em class="now"></em></div>
+      <div class="flow"></div>
+      <div class="node gate"><b>The gate</b><span>costs, luck, locked holdout; rules registered before trial 1</span><em class="now"></em></div>
+      <div class="flow back"></div>
+    </div>
+    <div class="rounds" id="rounds"></div>
+  </section>
+  <section class="row two needs-ev">
+    <div class="card">
+      <h2>Every trial in order <em>· Sharpe after costs against the rising bar</em></h2>
       <svg id="chart" viewBox="0 0 760 300" width="100%"></svg>
       <div class="legend">
-        <span><i style="background:var(--costs)"></i>lost to SPY after costs</span>
-        <span><i style="background:var(--lucky)"></i>beat SPY, but consistent with luck</span>
-        <span><i style="background:var(--holdout)"></i>failed the locked holdout</span>
-        <span><i style="background:var(--cand)"></i>candidate</span>
         <span class="muted">bar: Sharpe at 5 bps (top) to 30 bps (bottom); dot: 15 bps; ring: its Sharpe on the locked holdout</span>
       </div>
     </div>
     <div class="card funnel"><h2>The gate</h2><div id="funnel"></div><div id="bars" class="muted" style="font-size:12px;margin-top:12px"></div></div>
   </section>
   <section class="card"><h2 id="tiles-title">Sandboxes</h2><div class="tiles" id="tiles"></div></section>
-  <section class="row two">
-    <div class="card"><h2>The ledger: every trial counts</h2><div class="scroll"><table id="ledger"></table></div></div>
-    <div style="display:grid; gap:16px; align-content:start">
+  <section class="row two needs-ev">
+    <div class="card"><h2>The ledger <em>· every trial counts</em></h2><div class="scroll"><table id="ledger"></table></div></div>
+    <div style="display:grid; gap:18px; align-content:start">
       <div class="card"><h2>Holdout, refusals and outside input</h2><div id="events"></div></div>
       <div class="card"><h2>Research note</h2><div id="report" class="muted">not written yet</div></div>
     </div>
   </section>
   <section class="card"><h2>Log</h2><div class="log" id="log"></div></section>
 </main>
+<div id="tip"></div>
 <footer id="footer"></footer>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const f2 = (x) => (x == null || isNaN(x) ? "–" : Number(x).toFixed(2));
-const pct = (x) => (x == null ? "–" : (x * 100).toFixed(1) + "%");
-const color = (t) => t.candidate ? "var(--cand)" : t.stopped_at === "holdout" ? "var(--holdout)" : t.stopped_at === "luck" ? "var(--lucky)" : "var(--costs)";
+const vcls = (t) => t.candidate ? "cand" : t.stopped_at === "holdout" ? "hold" : t.stopped_at === "luck" ? "luck" : "costs";
+const color = (t) => ({cand: "var(--cand)", hold: "var(--holdout)", luck: "var(--lucky)", costs: "var(--costs)"})[vcls(t)];
+const usd = (v) => (v < 0 ? "−" : "") + (Math.abs(v) >= 1e6 ? "$" + (Math.abs(v) / 1e6).toFixed(2) + "M" : "$" + Math.round(Math.abs(v) / 1e3) + "k");
+const mi = (m) => { const [y, mo] = String(m).split("-").map(Number); return y * 12 + mo - 1; };
+const last = (c) => c[c.length - 1][1];
 let program = new URLSearchParams(location.search).get("program");
+let S = null, replay = null, heroKey = "", moneyKey = "", HL = null;
 
 async function loadPrograms() {
   const list = await (await fetch("/api/programs")).json();
   if (!program && list.length) program = list[0];
   $("program").innerHTML = list.map((p) => `<option ${p === program ? "selected" : ""}>${esc(p)}</option>`).join("");
 }
-$("program").onchange = (e) => { program = e.target.value; history.replaceState(null, "", "?program=" + program); tick(); };
+$("program").onchange = (e) => { program = e.target.value; replay = null; history.replaceState(null, "", "?program=" + program); tick(); };
 
 function chips(s) {
   const L = s.live || {};
@@ -134,6 +288,44 @@ function chips(s) {
   $("chips").innerHTML = c.map(([t, k]) => `<span class="chip ${k}">${esc(t)}</span>`).join("");
 }
 
+function spark(lk, id) {
+  const W = 260, H = 84, P = 8, a = lk.curve, b = lk.spy, vals = a.concat(b).map((p) => p[1]);
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const X = (i, n) => P + i / Math.max(n - 1, 1) * (W - 2 * P - 64), Y = (v) => P + (hi - v) / (hi - lo || 1) * (H - 2 * P);
+  const pth = (c) => c.map((p, i) => `${i ? "L" : "M"}${X(i, c.length).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join("");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}"><path d="${pth(b)}" class="s-spy"/><path d="${pth(a)}" class="s-bad"/>
+    <text x="${W - 58}" y="${Y(last(b)) + 4}" class="t-spy">SPY</text><text x="${W - 58}" y="${Y(last(a)) + 4}" class="t-bad">${esc(id)}</text></svg>`;
+}
+
+function money(s) {
+  const ev = s.evaluation, looks = s.looks || {}, ids = Object.keys(looks), spy = s.spy_curve || [];
+  const best = ev.trials.reduce((m, t) => (!m || t.sharpe["15"] > m.sharpe["15"] ? t : m), null);
+  if (ids.length) {
+    const id = ids[0], lk = looks[id], row = ev.trials.find((t) => t.trial === id) || {};
+    const a = 1e6 * last(lk.curve), b = 1e6 * last(lk.spy), which = best && best.trial === id ? "the best" : "one";
+    $("money").innerHTML = `<div><div class="kicker">What trusting the backtest would have cost</div>
+      <div class="m-head">$1M in <b class="mono">${esc(id)}</b>, ${which} of ${ev.n_trials} strategies Claude tried, became <b class="neg">${usd(a)}</b> on the locked holdout. The same $1M in SPY became <b>${usd(b)}</b>.</div>
+      <div class="muted">The gate had already refused ${esc(id)} on the search data alone (Deflated Sharpe ${f2(row.dsr)}, needed ${ev.rules.dsr_min}), before anyone opened the holdout. ${esc(lk.first)} to ${esc(lk.last)}, after ${ev.rules.cost_bps} bps costs.</div></div>
+      <div class="m-nums"><div class="m-num"><span>${esc(id)} on the holdout</span><b class="neg count" data-v="${a}">${usd(a)}</b></div>
+        <div class="m-num"><span>SPY on the holdout</span><b class="count" data-v="${b}">${usd(b)}</b></div>
+        <div class="m-num big"><span>saved per $1M by the refusal</span><b class="pos count" data-v="${b - a}">${usd(b - a)}</b></div></div>
+      ${spark(lk, id)}`;
+  } else if (best && (s.curves || {})[best.trial] && spy.length) {
+    const a = 1e6 * last(s.curves[best.trial]), b = 1e6 * last(spy);
+    $("money").innerHTML = `<div><div class="kicker">Nothing passed, so nothing was deployed</div>
+      <div class="m-head">The best of ${ev.n_trials} strategies Claude tried, <b class="mono">${esc(best.trial)}</b>, turned $1M into <b class="${a < b ? "neg" : ""}">${usd(a)}</b> on the search window. The same $1M in SPY became <b>${usd(b)}</b>.</div>
+      <div class="muted">No strategy cleared the gate, so none was deployed, and the holdout stays locked for the next idea.</div></div>
+      <div class="m-nums"><div class="m-num"><span>${esc(best.trial)}, search window</span><b class="count${a < b ? " neg" : ""}" data-v="${a}">${usd(a)}</b></div>
+        <div class="m-num"><span>SPY, search window</span><b class="count" data-v="${b}">${usd(b)}</b></div>
+        <div class="m-num big"><span>money put on a fluke</span><b class="pos">$0</b></div></div><div></div>`;
+  } else $("money").innerHTML = "";
+  document.querySelectorAll("#money .count").forEach((el) => {
+    const v = Number(el.dataset.v), t0 = performance.now();
+    const f = (now) => { const p = Math.min(1, (now - t0) / 1400); el.textContent = usd(v * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(f); };
+    requestAnimationFrame(f);
+  });
+}
+
 function stats(ev) {
   const f = ev.funnel, spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
   const cards = [
@@ -141,45 +333,156 @@ function stats(ev) {
     [f2(spy), `SPY's Sharpe after ${ev.rules.cost_bps} bps, same window`],
     [f2(ev.needed_sharpe), `Sharpe needed to pass the luck gate at N = ${ev.n}`],
     [`${ev.looks_left}<span class="muted" style="font-size:16px"> / ${ev.rules.holdout_looks}</span>`, "holdout looks left"],
-    [`<span style="color:${f.holdout_passed ? "var(--cand)" : "var(--text)"}">${f.holdout_passed}</span>`, "candidates (tracked, never traded)"],
+    [`${f.holdout_passed}`, "candidates (tracked, never traded)"],
   ];
   $("stats").innerHTML = cards.map(([b, s]) => `<div class="card stat"><b>${b}</b><span>${esc(s)}</span></div>`).join("");
 }
 
-function chart(ev) {
+function cloud(s, K) {
+  const ev = s.evaluation, spy = s.spy_curve || [], looks = s.looks || {}, curves = s.curves || {};
+  if (!spy.length) { $("cloud").innerHTML = ""; return; }
+  const W = 900, H = 400, L = 46, R = 150, T = 30, B = 26;
+  const shown = ev.trials.slice(0, K), shownIds = new Set(shown.map((t) => t.trial));
+  const cont = Object.entries(looks).filter(([id]) => shownIds.has(id)).map(([id, lk]) => {
+    const c = curves[id] && curves[id].length ? curves[id] : [[spy[spy.length - 1][0], 1]];
+    return {id, lk, t: lk.curve.map(([m, v]) => [m, v * last(c)]), spy: lk.spy.map(([m, v]) => [m, v * last(spy)])};
+  });
+  const allLooks = Object.values(looks), x0 = mi(spy[0][0]), xs = mi(spy[spy.length - 1][0]);
+  const xEnd = allLooks.length ? Math.max(...allLooks.map((lk) => mi(lk.spy[lk.spy.length - 1][0]))) : xs + 45;
+  const vals = spy.map((p) => p[1]);
+  ev.trials.forEach((t) => (curves[t.trial] || []).forEach((p) => vals.push(p[1])));
+  Object.entries(looks).forEach(([id, lk]) => {
+    const c = curves[id] && curves[id].length ? last(curves[id]) : 1;
+    lk.curve.forEach((p) => vals.push(p[1] * c)); lk.spy.forEach((p) => vals.push(p[1] * last(spy)));
+  });
+  const lo = Math.min(...vals) * 0.9, hi = Math.max(...vals) * 1.08;
+  const XI = (i) => L + (i - x0) / (xEnd - x0) * (W - L - R), X = (m) => XI(mi(m));
+  const Y = (v) => T + (Math.log(hi) - Math.log(v)) / (Math.log(hi) - Math.log(lo)) * (H - T - B);
+  const path = (c) => c.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join("");
+  let g = `<defs><linearGradient id="hz" x1="0" x2="1"><stop offset="0" stop-color="rgba(251,113,133,.13)"/><stop offset="1" stop-color="rgba(167,139,250,.04)"/></linearGradient>
+    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="rgba(251,113,133,.07)" stroke-width="3"/></pattern></defs>`;
+  [0.5, 0.75, 1, 1.5, 2, 3, 4, 6, 8].filter((v) => v > lo && v < hi).forEach((v) => {
+    g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" class="grid"/><text x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${v}×</text>`;
+  });
+  for (let yr = Math.ceil(x0 / 12); yr * 12 <= xEnd; yr++) {
+    const xx = XI(yr * 12);
+    if (xx > L + 12) g += `<line x1="${xx}" x2="${xx}" y1="${T}" y2="${H - B}" class="grid v"/><text x="${xx}" y="${H - 8}" text-anchor="middle">${yr}</text>`;
+  }
+  const hx = XI(xs);
+  g += `<rect x="${hx}" y="${T}" width="${W - R - hx}" height="${H - T - B}" fill="url(#hz)"/><rect x="${hx}" y="${T}" width="${W - R - hx}" height="${H - T - B}" fill="url(#hatch)"/>`;
+  g += `<line x1="${hx}" x2="${hx}" y1="${T - 14}" y2="${H - B}" class="divider"/>`;
+  g += `<text x="${hx + 8}" y="${T - 4}" class="zone">LOCKED HOLDOUT · ${allLooks.length ? `OPENED ${allLooks.length} OF ${ev.rules.holdout_looks} TIMES` : "NEVER OPENED"}</text>`;
+  g += `<text x="${L + 4}" y="${T - 4}" class="zone dim">SEARCH WINDOW · ALL CLAUDE CAN SEE</text>`;
+  shown.forEach((t, i) => {
+    const c = curves[t.trial];
+    if (c && c.length) g += `<path d="${path(c)}" class="tr ${vcls(t)}${replay && i === K - 1 ? " cur" : ""}${looks[t.trial] ? " star" : ""}" data-t="${t.trial}" pathLength="1"/>`;
+  });
+  g += `<path d="${path(spy)}" class="spy"/>`;
+  cont.forEach((c) => { g += `<path d="${path(c.spy)}" class="spy"/><path d="${path(c.t)}" class="tr hold star cont" data-t="${c.id}"/>`; });
+  const labels = [];
+  if (cont.length) cont.forEach((c) => {
+    labels.push({y: Y(last(c.spy)), x: X(c.spy[c.spy.length - 1][0]), text: `SPY  ×${last(c.lk.spy).toFixed(2)}`, cls: "l-spy"});
+    labels.push({y: Y(last(c.t)), x: X(c.t[c.t.length - 1][0]), text: `${c.id}  ×${last(c.lk.curve).toFixed(2)}`, cls: "l-bad"});
+  });
+  else labels.push({y: Y(last(spy)), x: X(spy[spy.length - 1][0]), text: `SPY  ×${last(spy).toFixed(2)}`, cls: "l-spy"});
+  const best = shown.reduce((m, t) => (!m || t.sharpe["15"] > m.sharpe["15"] ? t : m), null);
+  if (best && curves[best.trial] && !looks[best.trial]) {
+    const c = curves[best.trial];
+    g += `<circle cx="${X(c[c.length - 1][0])}" cy="${Y(last(c))}" r="3.5" fill="var(--amber)"/>`;
+    g += `<text x="${X(c[c.length - 1][0]) - 6}" y="${Y(last(c)) - 8}" text-anchor="end" class="endlbl l-best">best: ${esc(best.trial)} ×${last(c).toFixed(2)}</text>`;
+  }
+  labels.sort((a, b) => a.y - b.y).forEach((l, i, arr) => { if (i && l.y - arr[i - 1].y < 16) l.y = arr[i - 1].y + 16; });
+  labels.forEach((l) => { g += `<circle cx="${l.x}" cy="${l.y}" r="3.5" class="${l.cls === "l-spy" ? "" : "dot hold"}" fill="${l.cls === "l-spy" ? "var(--spy)" : "var(--red)"}"/><text x="${W - R + 10}" y="${l.y + 4}" class="endlbl ${l.cls}">${esc(l.text)}</text>`; });
+  if (cont.length) g += `<text x="${W - R + 10}" y="${Math.max(...labels.map((l) => l.y)) + 22}" class="endlbl" style="fill:var(--muted);font-weight:400">on the holdout</text>`;
+  shown.forEach((t) => { const c = curves[t.trial]; if (c && c.length) g += `<path d="${path(c)}" class="hit" data-t="${t.trial}"/>`; });
+  cont.forEach((c) => { g += `<path d="${path(c.t)}" class="hit" data-t="${c.id}"/>`; });
+  $("cloud").innerHTML = g;
+}
+
+function profile(ev, K) {
+  const W = 300, H = 400, L = 38, R = 86, T = 30, B = 26;
+  const spy = ev.spy.sharpe[String(ev.rules.cost_bps)], bs = ev.bar_series || [];
+  const cur = K && bs[K - 1] ? bs[K - 1] : {needed: ev.needed_sharpe, luck: ev.luck_bar_sharpe};
+  const all = ev.trials.map((t) => t.sharpe["15"]).concat([spy, ev.needed_sharpe, 0]);
+  const lo = Math.floor((Math.min(...all) - 0.05) * 4) / 4, hi = Math.ceil((Math.max(...all) + 0.1) * 4) / 4;
+  const Y = (v) => T + (hi - v) / (hi - lo) * (H - T - B);
+  const shown = ev.trials.slice(0, K), passed = shown.filter((t) => t.beats_spy && t.not_luck).length;
+  let g = "";
+  for (let v = lo; v <= hi + 1e-9; v += 0.25) g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" class="grid"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${v.toFixed(2)}</text>`;
+  g += `<rect x="${L}" y="${T}" width="${W - R - L}" height="${Math.max(0, Y(cur.needed) - T)}" class="passzone"/>`;
+  g += `<text x="${L + 8}" y="${T + 16}" class="zone ok">PASS ZONE · ${passed} ${passed === 1 ? "TRY" : "TRIES"}</text>`;
+  const bin = 0.05, count = {};
+  shown.forEach((t, i) => {
+    const b = Math.floor(t.sharpe["15"] / bin), k = (count[b] = (count[b] || 0) + 1) - 1;
+    g += `<circle cx="${L + 8 + k * 8.6}" cy="${Y((b + 0.5) * bin)}" r="3.9" class="dot ${vcls(t)}${replay && i === K - 1 ? " pop" : ""}" data-t="${t.trial}"/>`;
+  });
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(cur.luck)}" y2="${Y(cur.luck)}" class="ln-luck"/><text x="${W - R + 6}" y="${Y(cur.luck) + 4}" class="tl-luck">luck ${f2(cur.luck)}</text>`;
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(spy)}" y2="${Y(spy)}" class="ln-spy"/><text x="${W - R + 6}" y="${Y(spy) + 4}" class="tl-spy">SPY ${f2(spy)}</text>`;
+  g += `<line x1="${L}" x2="${W - R}" y1="${Y(cur.needed)}" y2="${Y(cur.needed)}" class="ln-need"/><text x="${W - R + 6}" y="${Y(cur.needed) + 4}" class="tl-need">needed ${f2(cur.needed)}</text>`;
+  g += `<text x="${L}" y="${H - 6}">Sharpe after ${ev.rules.cost_bps} bps · tries per 0.05 →</text>`;
+  $("profile").innerHTML = g;
+}
+
+function roundsView(s, K) {
+  const ev = s.evaluation, bs = ev.bar_series || [], spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
+  const order = {}, row = {};
+  ev.trials.forEach((t, i) => { order[t.trial] = i; row[t.trial] = t; });
+  const curTrial = replay && K ? ev.trials[K - 1].trial : null;
+  let best = -Infinity, html = "", curId = null;
+  (s.rounds || []).forEach((r) => {
+    const ts = r.trials.filter((id) => id in order && order[id] < K);
+    if (!ts.length && !(r.stop && K >= ev.trials.length)) return;
+    ts.forEach((id) => { best = Math.max(best, row[id].sharpe["15"]); });
+    const lastIdx = ts.length ? Math.max(...ts.map((id) => order[id])) : K - 1;
+    const need = bs[lastIdx] ? bs[lastIdx].needed : ev.needed_sharpe, isCur = curTrial && ts.includes(curTrial);
+    if (isCur) curId = "round-" + r.round;
+    html += (html ? `<div class="r-arrow">➜</div>` : "") + `<div class="round${isCur ? " cur" : ""}" id="round-${esc(r.round)}">
+      <div class="r-head"><b>Round ${esc(r.round)}</b>${r.recall_hits != null ? `<span class="pill mem">recalled ${esc(r.recall_hits)} memories</span>` : ""}<span class="pill">${ts.length} ideas</span></div>
+      <div class="r-lesson"><span class="who">Claude:</span> ${esc(r.lesson || "")}</div>
+      ${ts.length ? `<div class="r-trials">${ts.map((id) => `<span class="tp ${vcls(row[id])}" data-t="${esc(id)}">${esc(id.slice(2))} <b>${f2(row[id].sharpe["15"])}</b></span>`).join("")}</div>
+      <div class="r-foot">best so far <b>${f2(best)}</b> · SPY <b>${f2(spy)}</b> · needed <b>${f2(need)}</b></div>` : ""}
+      ${r.stop ? `<div class="r-stop">Claude stopped the search here instead of spending more tries</div>` : ""}</div>`;
+  });
+  const box = $("rounds");
+  box.innerHTML = html || `<span class="muted">no round has run yet</span>`;
+  const el = curId ? document.getElementById(curId) : null;
+  if (el) box.scrollLeft = el.offsetLeft - box.offsetLeft - 40;
+  else if (replay) box.scrollLeft = box.scrollWidth;
+}
+
+function chart(ev, K) {
   const W = 760, H = 300, L = 44, R = 70, T = 14, B = 26;
-  const ts = ev.trials, n = Math.max(ts.length, 10);
-  const vals = ts.flatMap((t) => [t.sharpe["5"], t.sharpe["30"]]).concat([ev.spy.sharpe["15"], ev.needed_sharpe, 0]);
+  const ts = ev.trials.slice(0, K), n = Math.max(ev.trials.length, 10);
+  const vals = ev.trials.flatMap((t) => [t.sharpe["5"], t.sharpe["30"]]).concat([ev.spy.sharpe["15"], ev.needed_sharpe, 0]);
   (ev.bar_series || []).forEach((b) => vals.push(b.needed));
   let lo = Math.min(...vals) - 0.1, hi = Math.max(...vals) + 0.1;
   lo = Math.floor(lo * 4) / 4; hi = Math.ceil(hi * 4) / 4;
   const x = (i) => L + (i + 0.5) * (W - L - R) / n, y = (v) => T + (hi - v) * (H - T - B) / (hi - lo);
   let g = "";
   for (let v = lo; v <= hi + 1e-9; v += 0.25) {
-    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#1f2730"/>`;
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="grid"/>`;
     g += `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v.toFixed(2)}</text>`;
   }
   const spy = ev.spy.sharpe[String(ev.rules.cost_bps)];
-  g += `<line x1="${L}" x2="${W - R}" y1="${y(spy)}" y2="${y(spy)}" stroke="var(--spy)" stroke-width="1.5"/>`;
-  g += `<text x="${W - R + 4}" y="${y(spy) + 4}" style="fill:var(--spy)">SPY ${f2(spy)}</text>`;
-  const bs = ev.bar_series || [];
+  g += `<line x1="${L}" x2="${W - R}" y1="${y(spy)}" y2="${y(spy)}" class="ln-spy"/>`;
+  g += `<text x="${W - R + 4}" y="${y(spy) + 4}" class="tl-spy">SPY ${f2(spy)}</text>`;
+  const bs = (ev.bar_series || []).slice(0, K);
   if (bs.length) {
     let p = `M ${L} ${y(bs[0].needed)}`;
     bs.forEach((b, i) => { p += ` L ${x(i) - (W - L - R) / n / 2} ${y(b.needed)} L ${x(i) + (W - L - R) / n / 2} ${y(b.needed)}`; });
-    g += `<path d="${p}" fill="none" stroke="var(--need)" stroke-width="2" stroke-dasharray="6 4"/>`;
-    g += `<text x="${W - R + 4}" y="${y(bs[bs.length - 1].needed) + 4}" style="fill:var(--need)">needed ${f2(bs[bs.length - 1].needed)}</text>`;
+    g += `<path d="${p}" fill="none" class="ln-need"/>`;
+    g += `<text x="${Math.min(x(bs.length - 1) + 12, W - R + 4)}" y="${y(bs[bs.length - 1].needed) + 4}" class="tl-need">needed ${f2(bs[bs.length - 1].needed)}</text>`;
   }
   ts.forEach((t, i) => {
-    const c = color(t), tip = `${t.trial} ${t.short}\nSharpe 5/15/30: ${f2(t.sharpe["5"])} / ${f2(t.sharpe["15"])} / ${f2(t.sharpe["30"])}\n${t.why}`;
-    g += `<g><title>${esc(tip)}</title><line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["5"])}" y2="${y(t.sharpe["30"])}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
-    g += `<circle cx="${x(i)}" cy="${y(t.sharpe["15"])}" r="4.5" fill="${c}"/></g>`;
+    const c = color(t), cls = vcls(t);
+    g += `<g data-t="${esc(t.trial)}"><line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["5"])}" y2="${y(t.sharpe["30"])}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
+    g += `<circle cx="${x(i)}" cy="${y(t.sharpe["15"])}" r="4.5" class="dot ${cls}${replay && i === K - 1 ? " pop" : ""}" data-t="${esc(t.trial)}"/></g>`;
     const h = t.holdout;
     if (h && h.sharpe != null) {
       const hc = h.passed ? "var(--cand)" : "var(--holdout)", hy = y(h.sharpe);
-      g += `<g><title>${esc(`${t.trial} on the locked holdout: ${h.why}`)}</title>`
-        + `<line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["15"]) + 5}" y2="${hy}" stroke="${hc}" stroke-width="1.5" stroke-dasharray="3 3"/>`
-        + `<circle cx="${x(i)}" cy="${hy}" r="6" fill="none" stroke="${hc}" stroke-width="2"/>`
-        + `<text x="${x(i) - 9}" y="${hy + 4}" text-anchor="end" style="fill:${hc}">${esc(t.trial)} on the holdout: ${f2(h.sharpe)} (SPY ${f2(h.spy_sharpe)})</text></g>`;
+      g += `<g data-t="${esc(t.trial)}"><line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["15"]) + 5}" y2="${hy}" stroke="${hc}" stroke-width="1.5" stroke-dasharray="3 3"/>`
+        + `<circle cx="${x(i)}" cy="${hy}" r="6" fill="none" stroke="${hc}" stroke-width="2" style="filter:drop-shadow(0 0 5px ${hc})"/>`
+        + `<text x="${x(i) - 9}" y="${hy + 4}" text-anchor="end" style="fill:${hc};font-weight:700">${esc(t.trial)} on the holdout: ${f2(h.sharpe)} (SPY ${f2(h.spy_sharpe)})</text></g>`;
     }
   });
   g += `<text x="${L}" y="${H - 6}">trial 1</text><text x="${W - R}" y="${H - 6}" text-anchor="end">trial ${n}</text>`;
@@ -195,7 +498,7 @@ function funnel(ev) {
     ["Passed the locked holdout", f.holdout_passed, "var(--cand)"],
   ];
   $("funnel").innerHTML = rows.map(([l, v, c]) => `<div class="bar"><div class="lbl"><span>${esc(l)}</span><b class="mono">${v}</b></div>
-    <div class="track"><div class="fill" style="width:${Math.max(v ? 3 : 0, 100 * v / top)}%;background:${c}"></div></div></div>`).join("");
+    <div class="track"><div class="fill" style="width:${Math.max(v ? 3 : 0, 100 * v / top)}%;background:${c};color:${c}"></div></div></div>`).join("");
   $("bars").innerHTML = `Luck bar at N = ${ev.n}: Sharpe ${f2(ev.luck_bar_sharpe)} is what the best of ${ev.n} worthless tries reaches by chance. ` +
     `Rules registered before the first trial, sha256 <span class="hash">${esc(ev.rules_sha256.slice(0, 16))}…</span>`;
 }
@@ -207,7 +510,7 @@ function tiles(s) {
   const running = ids.filter((i) => ["running", "starting"].includes(T[i].state)).length;
   $("tiles-title").textContent = `Sandboxes${s.live && s.live.executor === "daytona" ? " (Daytona, one per trial, network blocked, search data only)" : ""}` + (running ? ` · ${running} running` : "");
   $("tiles").innerHTML = ids.map((i) => { const t = T[i];
-    return `<div class="tile ${esc(t.state)}"><b class="mono">${esc(i)}</b><span class="st">${esc(t.state)}</span>
+    return `<div class="tile ${esc(t.state)}" data-t="${esc(i)}"><b class="mono">${esc(i)}</b><span class="st">${esc(t.state)}</span>
       <div class="sub">${esc(short[i] || "")}</div><div class="sub mono">${esc((t.where || "").slice(0, 13))} ${t.seconds ? t.seconds + "s" : ""}</div>
       ${t.error ? `<div class="sub" style="color:var(--bad)">${esc(t.error)}</div>` : ""}</div>`; }).join("") || `<span class="muted">no trial has run yet</span>`;
 }
@@ -215,7 +518,7 @@ function tiles(s) {
 function ledgerTable(ev) {
   const rows = ev.trials.slice().reverse().map((t) => {
     const cls = t.candidate ? "stop-cand" : "stop-" + t.stopped_at;
-    return `<tr><td class="mono">${esc(t.trial)}</td><td>${esc(t.short)}<div class="hyp">${esc(t.rationale)}</div></td>
+    return `<tr data-t="${esc(t.trial)}"><td class="mono">${esc(t.trial)}</td><td>${esc(t.short)}<div class="hyp">${esc(t.rationale)}</div></td>
       <td class="num">${f2(t.sharpe["5"])}<br>${f2(t.sharpe["15"])}<br>${f2(t.sharpe["30"])}</td>
       <td class="num">${f2(t.dsr)}</td><td class="why ${cls}">${esc(t.why)}</td></tr>`; }).join("");
   $("ledger").innerHTML = `<tr><th>Trial</th><th>Idea and hypothesis</th><th style="text-align:right">Sharpe<br>5 / 15 / 30 bps</th><th style="text-align:right">Deflated<br>Sharpe</th><th>Gate</th></tr>` + rows;
@@ -246,21 +549,96 @@ function reportView(s) {
   $("report").innerHTML = `<span class="badge ${g.grounded ? "ok" : "no"}">${g.grounded ? `grounded: all ${g.numbers} numbers trace to the ledger` : `${(g.unsupported || []).length} numbers not in the ledger`}</span><div class="report">${html}</div>`;
 }
 
-async function tick() {
-  if (!program) { await loadPrograms(); if (!program) return; }
-  let s;
-  try { s = await (await fetch("/api/state?program=" + encodeURIComponent(program))).json(); } catch (e) { return; }
+function replayLabel(s, K) {
+  const ev = s.evaluation, n = ev.trials.length, R = (s.rounds || []).filter((r) => r.trials.length).length;
+  if (!replay) { $("replay-label").innerHTML = `${n} tries · ${R} rounds`; return; }
+  const t = ev.trials[K - 1], r = t ? (s.rounds || []).find((x) => x.trials.includes(t.trial)) : null;
+  $("replay-label").innerHTML = t ? `round <b>${esc(r ? r.round : "?")}</b> · <b>${esc(t.trial)}</b> · ${K}/${n}` : "";
+}
+
+function render() {
+  const s = S;
+  if (!s) return;
   chips(s);
+  $("main").classList.toggle("is-broken", !s.intact);
   if (!s.intact) {
     $("stats").innerHTML = `<div class="broken"><h2>This ledger was tampered with</h2><div>${esc(s.error)}.</div>
       <div class="muted" style="margin-top:6px">Every entry carries the hash of the one before it, so changing a number or deleting a trial breaks the chain. The gate refuses to judge a ledger it cannot verify.</div></div>`;
+    heroKey = moneyKey = "";
     return;
   }
   tiles(s);
+  liveLoop(s);
   $("log").innerHTML = ((s.live && s.live.log) || []).slice().reverse().map((l) => `<div><span class="mono">${esc(l.at.slice(11, 19))}</span> ${esc(l.text)}</div>`).join("");
   if (!s.evaluation) return;
-  stats(s.evaluation); chart(s.evaluation); funnel(s.evaluation); ledgerTable(s.evaluation); events(s); reportView(s);
+  const ev = s.evaluation, K = replay ? Math.min(replay.k, ev.trials.length) : ev.trials.length;
+  const key = `${program}|${s.ledger.head}|${K}|${!!replay}`;
+  if (key !== heroKey) { heroKey = key; cloud(s, K); profile(ev, K); roundsView(s, K); chart(ev, K); replayLabel(s, K); applyHL(); }
+  const mk = `${program}|${s.ledger.head}`;
+  if (mk !== moneyKey) { moneyKey = mk; money(s); }
+  $("replay").textContent = replay ? "■ Stop" : "▶ Replay the hunt";
+  $("replay").classList.toggle("on", !!replay);
+  stats(ev); funnel(ev); ledgerTable(ev); events(s); reportView(s); applyHL();
   $("footer").innerHTML = `Ledger: ${s.ledger.entries} entries, hash chain head <span class="hash">${esc(s.ledger.head.slice(0, 16))}…</span>. Every verdict on this page is recomputed from the ledger by the gate's code.`;
+}
+
+function liveLoop(s) {
+  const L = s.live || {}, n = s.evaluation ? s.evaluation.n_trials : 0;
+  const running = Object.values(L.tiles || {}).filter((t) => ["running", "starting"].includes(t.state)).length;
+  const now = {
+    ready: ["mem", "loading the ledger and the rules"],
+    proposing: ["claude", `thinking up round ${L.round || 1}: reading ${n} past trials and its memory`],
+    running: ["day", `running round ${L.round || ""} in ${running || "its"} sandboxes`],
+    holdout: ["gate", "deciding whether any trial may open the locked holdout"],
+    report: ["claude", "writing the research note"],
+  }[L.phase];
+  document.querySelectorAll(".loop .node").forEach((el) => {
+    const on = !!now && el.classList.contains(now[0]);
+    el.classList.toggle("live", on);
+    el.querySelector(".now").textContent = on ? now[1] : "";
+  });
+}
+
+function step() {
+  if (!replay || !S || !S.evaluation) return;
+  const n = S.evaluation.trials.length;
+  replay.k += 1;
+  render();
+  if (replay.k >= n) { setTimeout(() => { replay = null; render(); }, 2200); return; }
+  const nextRoundStarts = S.rounds && S.rounds.some((r) => r.trials[0] === (S.evaluation.trials[replay.k] || {}).trial);
+  replay.timer = setTimeout(step, nextRoundStarts ? 1300 : 260);
+}
+$("replay").onclick = () => {
+  if (replay) { clearTimeout(replay.timer); replay = null; render(); return; }
+  replay = {k: 0}; render(); replay.timer = setTimeout(step, 500);
+};
+
+function applyHL() {
+  document.body.classList.toggle("dim", !!HL);
+  document.querySelectorAll("[data-t]").forEach((el) => el.classList.toggle("hl", el.dataset.t === HL));
+}
+function showTip(id, e) {
+  const ev = S && S.evaluation, t = ev && ev.trials.find((x) => x.trial === id), tip = $("tip");
+  if (!t) { tip.style.display = "none"; return; }
+  const h = t.holdout ? `<div style="margin-top:6px;color:${t.holdout.passed ? "var(--cand)" : "var(--holdout)"}">holdout: ${esc(t.holdout.why)}</div>` : "";
+  tip.innerHTML = `<b class="mono">${esc(t.trial)}</b> <span class="muted">${esc(t.short)}</span>
+    <div style="margin:4px 0" class="mono">Sharpe 5 / 15 / 30 bps: ${f2(t.sharpe["5"])} / ${f2(t.sharpe["15"])} / ${f2(t.sharpe["30"])} · DSR ${f2(t.dsr)}</div>
+    <div class="hyp">Claude's hypothesis: ${esc(t.rationale)}</div><div style="margin-top:6px" class="stop-${t.candidate ? "cand" : t.stopped_at}">${esc(t.why)}</div>${h}`;
+  tip.style.display = "block";
+  const w = tip.offsetWidth, hgt = tip.offsetHeight;
+  tip.style.left = Math.min(e.clientX + 16, innerWidth - w - 10) + "px";
+  tip.style.top = (e.clientY + 16 + hgt > innerHeight ? e.clientY - hgt - 12 : e.clientY + 16) + "px";
+}
+document.addEventListener("mousemove", (e) => {
+  const el = e.target.closest && e.target.closest("[data-t]"), id = el ? el.dataset.t : null;
+  if (id !== HL) { HL = id; applyHL(); }
+  if (id) showTip(id, e); else $("tip").style.display = "none";
+});
+
+async function tick() {
+  if (!program) { await loadPrograms(); if (!program) return; }
+  try { S = await (await fetch("/api/state?program=" + encodeURIComponent(program))).json(); } catch (e) { return; }
+  render();
 }
 loadPrograms().then(tick);
 setInterval(tick, 1500);

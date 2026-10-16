@@ -79,9 +79,27 @@ def state(program: str):
     for e, src in zip([x for x in events if x["kind"] == "rejected"], ledger.entries("rejected")):
         e["proposal"] = src["proposal"]
     rep = ledger.entries("report")
+    cost = str(ev["rules"]["cost_bps"])
+    looks = {e["trial"]: {"curve": e["result"].get("curve"), "spy": e["spy"].get("curve"), "verdict": e["verdict"],
+                          "cagr": e["result"]["costs"][cost]["cagr"], "spy_cagr": e["spy"]["costs"][cost]["cagr"],
+                          "first": e["result"].get("first"), "last": e["result"].get("last")}
+             for e in ledger.entries("look")}
+    rounds: dict = {}
+    for t in trials:
+        rounds.setdefault(t.get("round"), {"round": t.get("round"), "trials": []})["trials"].append(t["trial"])
+    for e in ledger.entries("note"):
+        if "lesson" in e:
+            r = rounds.setdefault(e.get("round"), {"round": e.get("round"), "trials": []})
+            r.setdefault("lesson", e["lesson"])
+            r["recall_hits"] = e.get("recall_hits", r.get("recall_hits"))
+            if e.get("stop"):
+                r["stop"] = e["lesson"]
     return {
         "program": program, "intact": intact, "live": live, "evaluation": ev, "events": events[-80:],
         "report": rep[-1] if rep else None,
         "ledger": {"entries": len(ledger.entries()), "head": ledger.head},
         "curves": {t["trial"]: t["result"].get("curve") for t in trials},
+        "spy_curve": ledger.first("baseline")["result"].get("curve"),
+        "looks": looks,
+        "rounds": sorted((r for r in rounds.values() if r["round"] is not None), key=lambda r: r["round"]),
     }
