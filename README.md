@@ -4,6 +4,8 @@ An AI quant researcher that hunts for trading strategies and can't fool itself.
 
 ![The live view of a 60-trial hunt: $1M in the best strategy Claude found became $1.26M on the locked holdout while SPY made $2.05M; every strategy's growth on the search window and the holdout; one dot per try against the bar that rises with every try](docs/live-view.png)
 
+<img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/aba9deab-ee71-4978-ab58-a8faa1639ffc" />
+
 Backtests lie in three ways: they test on today's winners (survivorship), they forget trading costs, and they
 report the best of many tries as if it were the only one. An AI agent makes the third lie worse, because it can
 try ideas faster than any person and will happily report the luckiest. A pair rule I built backtested at 57.3% a
