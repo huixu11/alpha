@@ -4,13 +4,18 @@ from __future__ import annotations
 import os
 import re
 
-_PREF = ("opus", "sonnet", "haiku")
+_TIER = {"opus": 3, "sonnet": 1, "haiku": 0}
 
 
 def _rank(model_id: str) -> tuple:
-    stamp = re.search(r"(\d{8})", model_id)
-    tier = next((i for i, n in enumerate(_PREF) if n in model_id), len(_PREF))
-    return (tier != 2, stamp.group(1) if stamp else "", -tier)
+    """Haiku last, then the highest version (newer ids carry no date), Opus first, US profiles before global."""
+    name = model_id.split("anthropic.", 1)[-1]
+    parts = re.split(r"[-:]", name)
+    version = tuple(int(p) for p in parts if p.isdigit() and len(p) <= 2)[:2]
+    tier = next((v for k, v in _TIER.items() if k in parts), 2)
+    stamp = next((p for p in parts if p.isdigit() and len(p) == 8), "")
+    prefix = {"us": 2, "global": 0}.get(model_id.split(".", 1)[0], 1)
+    return (tier != 0, version + (0,) * (2 - len(version)), tier, stamp, prefix)
 
 
 def bedrock_models(region: str) -> list[str]:

@@ -27,13 +27,15 @@ def main() -> int:
     ap.add_argument("--rounds", type=int, help="stop the search after this many rounds")
     ap.add_argument("--executor", choices=("daytona", "local"))
     ap.add_argument("--proposer", choices=("claude", "random"), default="claude")
+    ap.add_argument("--style", choices=sorted(agent.STYLES), default="careful",
+                    help="careful: one hypothesis per trial; eager: chase the highest Sharpe with the whole budget")
     ap.add_argument("--tip-file", action="append", default=[], help="outside text the researcher reads as data")
     args = ap.parse_args()
     sys.stdout.reconfigure(errors="replace")
 
     tips = [Path(p).read_text(encoding="utf-8").strip() for p in args.tip_file]
     hunt = agent.Hunt(args.program, executors.pick(args.executor), batch=args.batch, tips=tips,
-                      proposer=args.proposer, max_rounds=args.rounds)
+                      proposer=args.proposer, max_rounds=args.rounds, style=args.style)
     try:
         out = hunt.run()
     finally:

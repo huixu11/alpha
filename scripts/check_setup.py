@@ -29,7 +29,7 @@ def claude() -> str:
     from honest_alpha import llm
     client, model, where = llm.client()
     with tracing.span("setup check", "CHAIN"):
-        msg = client.messages.create(model=model, max_tokens=8, messages=[{"role": "user", "content": "Reply with OK."}])
+        msg = client.messages.create(model=model, max_tokens=1000, messages=[{"role": "user", "content": "Reply with OK."}])
     return f"{where}, model {model}, replied {''.join(b.text for b in msg.content if b.type == 'text')!r}"
 
 

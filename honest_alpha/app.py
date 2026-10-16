@@ -72,7 +72,8 @@ def state(program: str):
     ev["bar_series"] = series
 
     keep = ("trial", "reason", "why", "verdict", "at", "hash", "tip", "flagged", "handling", "lesson", "round",
-            "recall_trace", "holdout_skipped", "note", "sha256", "request", "stop")
+            "recall_trace", "holdout_skipped", "note", "sha256", "request", "stop", "researcher", "instructions",
+            "model", "holdout_decision", "comment", "eligible")
     events = [{"kind": e["kind"], **{k: e[k] for k in keep if k in e}}
               for e in ledger.entries() if e["kind"] in ("look", "refusal", "candidate", "note", "rejected")]
     for e, src in zip([x for x in events if x["kind"] == "rejected"], ledger.entries("rejected")):

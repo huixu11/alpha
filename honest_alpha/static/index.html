@@ -22,6 +22,9 @@
   .chip.on { color: var(--text); border-color: #3d4a5c; }
   .chip.on::before { content: "\25CF "; color: var(--cand); }
   .chip.phase { color: var(--run); border-color: var(--run); }
+  .chip.bad { color: var(--bad); border-color: var(--bad); font-weight: 600; }
+  .broken { grid-column: 1 / -1; border: 2px solid var(--bad); border-radius: 10px; padding: 18px 22px; background: rgba(248, 81, 73, .08); }
+  .broken h2 { color: var(--bad); font-size: 22px; margin: 0 0 6px; text-transform: none; letter-spacing: 0; }
   main { padding: 18px 24px 40px; display: grid; gap: 16px; }
   .row { display: grid; gap: 16px; }
   .stats { grid-template-columns: repeat(5, 1fr); }
@@ -123,9 +126,10 @@ function chips(s) {
     [`phase: ${L.phase || "idle"}${L.round ? " · round " + L.round : ""}`, "phase"],
     [`sandboxes: ${L.executor === "daytona" ? "Daytona" : L.executor || "–"}`, L.executor === "daytona" ? "on" : ""],
     [`model: ${L.model || "–"}`, L.model ? "on" : ""],
+    ...(L.style ? [[`researcher: ${L.style}`, "on"]] : []),
     [`memory: ${L.memory ? "SurrealDB" : "off"}`, L.memory ? "on" : ""],
     [`tracing: ${L.tracing ? "Arize" : "off"}`, L.tracing ? "on" : ""],
-    [`ledger: ${s.intact ? "chain intact" : "BROKEN"}`, s.intact ? "on" : ""],
+    [`ledger: ${s.intact ? "chain intact" : "BROKEN"}`, s.intact ? "on" : "bad"],
   ];
   $("chips").innerHTML = c.map(([t, k]) => `<span class="chip ${k}">${esc(t)}</span>`).join("");
 }
@@ -217,6 +221,9 @@ function events(s) {
     else if (e.kind === "refusal") out.push(`<div class="ev refusal"><b>Refused</b> ${esc(e.request || "")} ${esc(e.trial || "")}: ${esc(e.why)}</div>`);
     else if (e.kind === "candidate") out.push(`<div class="ev candidate"><b class="mono">${esc(e.trial)}</b> registered as a candidate, sha256 <span class="hash">${esc((e.sha256 || "").slice(0, 16))}…</span></div>`);
     else if (e.kind === "note" && e.holdout_skipped) out.push(`<div class="ev">Holdout stays locked: ${esc(e.holdout_skipped)}</div>`);
+    else if (e.kind === "note" && e.researcher) out.push(`<div class="ev"><b>Researcher: ${esc(e.researcher)}</b> <span class="muted">${esc(e.model || "")}</span><div class="hyp">${esc(e.instructions || "")}</div></div>`);
+    else if (e.kind === "note" && e.stop) out.push(`<div class="ev look"><b>The researcher stopped the search</b> in round ${esc(e.round)}<div class="hyp">${esc(e.lesson || e.stop)}</div></div>`);
+    else if (e.kind === "note" && e.holdout_decision) out.push(`<div class="ev look"><b>Holdout:</b> ${e.holdout_decision.length ? "the researcher asks to look at " + esc(e.holdout_decision.join(", ")) : `no look requested (${esc((e.eligible || []).length)} trials were eligible)`}<div class="hyp">${esc(e.comment || "")}</div></div>`);
     else if (e.kind === "rejected") out.push(`<div class="ev refusal">Proposal refused before running: ${esc(e.why)}</div>`);
   });
   $("events").innerHTML = out.slice(-14).reverse().join("") || `<span class="muted">nothing yet</span>`;
@@ -236,7 +243,11 @@ async function tick() {
   let s;
   try { s = await (await fetch("/api/state?program=" + encodeURIComponent(program))).json(); } catch (e) { return; }
   chips(s);
-  if (!s.intact) { $("stats").innerHTML = `<div class="card" style="color:var(--bad)">${esc(s.error)}</div>`; return; }
+  if (!s.intact) {
+    $("stats").innerHTML = `<div class="broken"><h2>This ledger was tampered with</h2><div>${esc(s.error)}.</div>
+      <div class="muted" style="margin-top:6px">Every entry carries the hash of the one before it, so changing a number or deleting a trial breaks the chain. The gate refuses to judge a ledger it cannot verify.</div></div>`;
+    return;
+  }
   tiles(s);
   $("log").innerHTML = ((s.live && s.live.log) || []).slice().reverse().map((l) => `<div><span class="mono">${esc(l.at.slice(11, 19))}</span> ${esc(l.text)}</div>`).join("");
   if (!s.evaluation) return;

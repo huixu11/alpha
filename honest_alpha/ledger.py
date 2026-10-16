@@ -44,7 +44,8 @@ class Ledger:
         prev = GENESIS
         for i, e in enumerate(self._entries):
             if e.get("seq") != i or e.get("prev") != prev or entry_hash(e) != e.get("hash"):
-                raise LedgerError(f"{self.path} is broken at entry {i}: it was edited or a line was removed")
+                raise LedgerError(f"{self.path.parent.name}/{self.path.name} is broken at entry {i}: "
+                                  f"it was edited or a line was removed")
             prev = e["hash"]
 
     def append(self, kind: str, body: dict) -> dict:
