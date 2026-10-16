@@ -145,6 +145,39 @@
   .tp.hl { box-shadow: 0 0 12px currentColor; }
   .r-foot { font-size: 12px; color: var(--muted); } .r-foot b { color: var(--text); font-family: "JetBrains Mono", monospace; }
   .r-stop { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--amber); }
+  .r-lesson .who.you { color: var(--cyan); } .pill.desk { color: var(--cyan); border-color: rgba(34,211,238,.45); }
+
+  .msgs { max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 10px; }
+  .msg { max-width: 80%; border-radius: 14px; padding: 9px 13px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; animation: rise .35s ease-out; }
+  .msg.person { align-self: flex-end; background: linear-gradient(135deg, rgba(34,211,238,.16), rgba(167,139,250,.16)); border: 1px solid rgba(34,211,238,.35); }
+  .msg.claude { align-self: flex-start; background: rgba(255,255,255,.035); border: 1px solid rgba(251,191,36,.35); }
+  .msg.err { border-color: rgba(251,113,133,.55); color: #fda4af; }
+  .msg .who { display: block; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .msg.person .who { color: var(--cyan); } .msg.claude .who { color: var(--amber); }
+  .msg img { display: block; max-width: 280px; max-height: 190px; border-radius: 8px; margin-top: 6px; border: 1px solid var(--line); }
+  .res { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; padding: 7px 10px; border-radius: 10px; white-space: normal;
+    background: rgba(5,7,13,.55); border: 1px solid var(--line); font-size: 12.5px; cursor: crosshair; }
+  .res .m { font-family: "JetBrains Mono", monospace; } .res.hl { box-shadow: 0 0 16px rgba(34,211,238,.35); border-color: var(--cyan); }
+  .compose { display: flex; gap: 10px; align-items: flex-end; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: rgba(5,7,13,.5); transition: border-color .2s, box-shadow .2s; }
+  .compose:focus-within, .compose.drag { border-color: rgba(34,211,238,.6); box-shadow: 0 0 26px rgba(34,211,238,.2); }
+  .compose textarea { flex: 1; resize: none; min-height: 44px; max-height: 140px; background: transparent; color: var(--text); border: 0; outline: 0; font: inherit; font-size: 14px; }
+  .thumb { position: relative; } .thumb img { height: 46px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--cyan); display: block; }
+  .thumb button { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; border: 0; background: var(--red); color: #05070d; font-weight: 800; font-size: 11px; cursor: pointer; line-height: 18px; padding: 0; }
+  button.ghost { font: inherit; font-size: 13px; color: var(--text); background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+  button.ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+  button.play:disabled { opacity: .45; cursor: wait; }
+  .examples { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0 10px; } .examples button { font-size: 12px; padding: 3px 11px; }
+  .dsteps { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .dsteps span { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); }
+  .dsteps span.on { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 12px rgba(34,211,238,.3); }
+  .dsteps span.done { color: var(--green); border-color: rgba(52,211,153,.5); }
+  .dbar { height: 5px; border-radius: 5px; background: rgba(255,255,255,.06); overflow: hidden; margin: 8px 0 10px; }
+  .dbar i { display: block; height: 100%; width: 0; border-radius: 5px; background: linear-gradient(90deg, var(--cyan), var(--violet)); box-shadow: 0 0 12px var(--cyan); transition: width .8s ease-out; }
+  th.sort { cursor: pointer; user-select: none; } th.sort:hover, th.sort.on { color: var(--cyan); }
+  .hide-btn { visibility: hidden; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; font-size: 11px; border-radius: 6px; padding: 0 6px; margin-top: 4px; }
+  tr:hover .hide-btn { visibility: visible; } .hide-btn:hover { color: var(--red); border-color: var(--red); }
+  .lbar { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; flex-wrap: wrap; }
+  .lbar b { color: var(--text); } .lbar a { color: var(--cyan); cursor: pointer; text-decoration: underline; }
 
   .progs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
   .prog { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: var(--panel); cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .15s; }
@@ -244,6 +277,20 @@
     </div>
     <div class="rounds" id="rounds"></div>
   </section>
+  <section class="card needs-ev" id="desk-card">
+    <div class="card-head"><h2>Talk to the researcher <em>· add or change a strategy in words or with a screenshot: it is tested like any other try, and it counts</em></h2>
+      <div class="sp"><span class="muted" id="desk-left"></span></div></div>
+    <div class="msgs" id="msgs"></div>
+    <div id="desk-progress" style="display:none"><div class="dsteps" id="dsteps"></div><div class="dbar"><i id="dbar"></i></div></div>
+    <div class="examples" id="examples"></div>
+    <div class="compose" id="compose">
+      <div class="thumb" id="thumb" style="display:none"></div>
+      <textarea id="say" rows="2" placeholder="Describe a strategy, ask to change a trial, or paste / drop a screenshot of one (a book page, a chart, a post)"></textarea>
+      <input type="file" id="file" accept="image/*" hidden>
+      <button class="ghost" id="attach">+ Screenshot</button>
+      <button class="play" id="send">Send</button>
+    </div>
+  </section>
   <section class="row two needs-ev">
     <div class="card">
       <h2>Every trial in order <em>· Sharpe after costs against the rising bar</em></h2>
@@ -256,7 +303,7 @@
   </section>
   <section class="card"><h2 id="tiles-title">Sandboxes</h2><div class="tiles" id="tiles"></div></section>
   <section class="row two needs-ev">
-    <div class="card"><h2>The ledger <em>· every trial counts</em></h2><div class="scroll"><table id="ledger"></table></div></div>
+    <div class="card"><h2>The ledger <em>· every trial counts</em></h2><div class="lbar" id="lbar"></div><div class="scroll"><table id="ledger"></table></div></div>
     <div style="display:grid; gap:18px; align-content:start">
       <div class="card"><h2>Holdout, refusals and outside input</h2><div id="events"></div></div>
       <div class="card"><h2>Research note</h2><div id="report" class="muted">not written yet</div></div>
@@ -456,7 +503,8 @@ function roundsView(s, K) {
     const need = bs[lastIdx] ? bs[lastIdx].needed : ev.needed_sharpe, isCur = curTrial && ts.includes(curTrial);
     if (isCur) curId = "round-" + r.round;
     html += (html ? `<div class="r-arrow">➜</div>` : "") + `<div class="round${isCur ? " cur" : ""}" id="round-${esc(r.round)}">
-      <div class="r-head"><b>Round ${esc(r.round)}</b>${r.recall_hits != null ? `<span class="pill mem">recalled ${esc(r.recall_hits)} memories</span>` : ""}<span class="pill">${ts.length} ideas</span></div>
+      <div class="r-head"><b>Round ${esc(r.round)}</b>${r.desk ? `<span class="pill desk">from the desk</span>` : ""}${r.recall_hits != null ? `<span class="pill mem">recalled ${esc(r.recall_hits)} memories</span>` : ""}<span class="pill">${ts.length} ideas</span></div>
+      ${r.desk ? `<div class="r-lesson"><span class="who you">You:</span> ${esc(r.desk)}</div>` : ""}
       <div class="r-lesson"><span class="who">Claude:</span> ${esc(r.lesson || "")}</div>
       ${ts.length ? `<div class="r-trials">${ts.map((id) => `<span class="tp ${vcls(row[id])}" data-t="${esc(id)}">${esc(id.slice(2))} <b>${f2(row[id].sharpe["15"])}</b></span>`).join("")}</div>
       <div class="r-foot">best so far <b>${f2(best)}</b> · SPY <b>${f2(spy)}</b> · needed <b>${f2(need)}</b></div>` : ""}
@@ -534,19 +582,136 @@ function tiles(s) {
       ${t.error ? `<div class="sub" style="color:var(--bad)">${esc(t.error)}</div>` : ""}</div>`; }).join("") || `<span class="muted">no trial has run yet</span>`;
 }
 
-function ledgerTable(ev) {
-  const rows = ev.trials.slice().reverse().map((t) => {
-    const cls = t.candidate ? "stop-cand" : "stop-" + t.stopped_at;
-    return `<tr data-t="${esc(t.trial)}"><td class="mono">${esc(t.trial)}</td><td>${esc(pretty(t.short))}<div class="hyp">${esc(t.rationale)}</div></td>
+let LSORT = {k: "order", d: -1};
+const hiddenKey = () => "honest-alpha-hidden-" + program;
+const hiddenSet = () => new Set(JSON.parse(localStorage.getItem(hiddenKey()) || "[]"));
+function ledgerTable(s) {
+  const ev = s.evaluation, H = hiddenSet(), cost = String(ev.rules.cost_bps);
+  const money = (t) => { const c = (s.curves || {})[t.trial]; return c && c.length ? last(c) * 1e6 : null; };
+  const spyM = s.spy_curve && s.spy_curve.length ? last(s.spy_curve) * 1e6 : null;
+  const stage = (t) => t.candidate ? 3 : ({holdout: 2, luck: 1}[t.stopped_at] ?? 0);
+  const val = {order: (t, i) => i, sharpe: (t) => t.sharpe[cost], money: (t) => money(t) ?? -1, dsr: (t) => t.dsr ?? -1,
+               gate: (t) => stage(t) + t.sharpe[cost] / 100};
+  const shown = ev.trials.map((t, i) => ({t, i})).filter(({t}) => !H.has(t.trial));
+  shown.sort((a, b) => (val[LSORT.k](a.t, a.i) - val[LSORT.k](b.t, b.i)) * LSORT.d);
+  const rows = shown.map(({t}) => {
+    const cls = t.candidate ? "stop-cand" : "stop-" + t.stopped_at, m = money(t);
+    return `<tr data-t="${esc(t.trial)}"><td class="mono">${esc(t.trial)}<br><button class="hide-btn" data-hide="${esc(t.trial)}" title="hide it from this table; it still counts">✕ hide</button></td>
+      <td>${esc(pretty(t.short))}<div class="hyp">${esc(t.rationale)}</div></td>
       <td class="num">${f2(t.sharpe["5"])}<br>${f2(t.sharpe["15"])}<br>${f2(t.sharpe["30"])}</td>
+      <td class="num ${m != null && spyM != null && m > spyM ? "pos" : ""}">${m != null ? usd(m) : "–"}</td>
       <td class="num">${f2(t.dsr)}</td><td class="why ${cls}">${esc(t.why)}</td></tr>`; }).join("");
-  $("ledger").innerHTML = `<tr><th>Trial</th><th>Idea and hypothesis</th><th style="text-align:right">Sharpe<br>5 / 15 / 30 bps</th><th style="text-align:right">Deflated<br>Sharpe</th><th>Gate</th></tr>` + rows;
+  const th = (k, label, right) => `<th class="sort${LSORT.k === k ? " on" : ""}" data-sort="${k}"${right ? ' style="text-align:right"' : ""}>${label}${LSORT.k === k ? (LSORT.d < 0 ? " ▼" : " ▲") : ""}</th>`;
+  $("ledger").innerHTML = `<tr>${th("order", "Trial")}<th>Idea and hypothesis</th>${th("sharpe", "Sharpe<br>5 / 15 / 30 bps", 1)}${th("money", "$1M became<br>after 15 bps", 1)}${th("dsr", "Deflated<br>Sharpe", 1)}${th("gate", "Gate")}</tr>` + rows;
+  $("lbar").innerHTML = `Click a column to sort, ✕ to hide a try.` + (H.size
+    ? ` <b>${H.size} hidden</b>, but they still count: the bar is set by all <b>${ev.n}</b> tries. <a data-unhide="1">show all</a>`
+    : ` Hiding never deletes: the bar is set by all <b>${ev.n}</b> tries.`) + (spyM ? ` · SPY: $1M became <b class="mono">${usd(spyM)}</b>` : "");
 }
+$("ledger").addEventListener("click", (e) => {
+  const h = e.target.closest("[data-hide]");
+  if (h) { const H = hiddenSet(); H.add(h.dataset.hide); localStorage.setItem(hiddenKey(), JSON.stringify([...H])); render(); return; }
+  const th = e.target.closest("th[data-sort]");
+  if (th) { const k = th.dataset.sort; LSORT = LSORT.k === k ? {k, d: -LSORT.d} : {k, d: -1}; render(); }
+});
+$("lbar").addEventListener("click", (e) => { if (e.target.closest("[data-unhide]")) { localStorage.removeItem(hiddenKey()); render(); } });
+
+// ---- the desk: a person adds or changes strategies by talking to the researcher ----
+let deskImage = null, deskBusy = false, deskStart = 0, deskPhase = null, deskPhaseAt = 0, deskLocal = [], deskKey = "";
+const IMGS = {};
+const sha256 = async (url) => {
+  const b = Uint8Array.from(atob(url.split(",")[1]), (c) => c.charCodeAt(0));
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", b))].map((x) => x.toString(16).padStart(2, "0")).join("");
+};
+const resLine = (t) => `<div class="res" data-t="${esc(t.trial)}"><b class="mono">${esc(t.trial)}</b><span>${esc(pretty(t.short))}</span>
+  <span class="m">Sharpe ${f2(t.sharpe)} vs SPY ${f2(t.spy)}</span><span class="m">$1M → <b class="${t.money > t.spy_money ? "pos" : "neg"}">${usd(t.money)}</b> vs SPY ${usd(t.spy_money)}</span>
+  <span class="stop-${t.candidate ? "cand" : esc(t.stopped_at)}">${esc(t.why)}</span></div>`;
+function deskView(s) {
+  const ev = s.evaluation, msgs = (s.desk || []).concat(deskLocal);
+  $("desk-left").textContent = `${Math.max(0, ev.budget - ev.n_trials)} of ${ev.budget} tries left in ${program}`;
+  const key = `${program}|${msgs.length}|${deskBusy}|${(s.desk || []).length}`;
+  if (key !== deskKey) {
+    deskKey = key;
+    $("msgs").innerHTML = msgs.map((m) => m.who === "person"
+      ? `<div class="msg person"><span class="who">You</span>${esc(m.text)}${m.img || IMGS[m.screenshot] ? `<img src="${m.img || IMGS[m.screenshot]}">` : m.screenshot ? `<div class="hyp">[screenshot ${esc(m.screenshot.slice(0, 8))}]</div>` : ""}</div>`
+      : `<div class="msg claude${m.err ? " err" : ""}"><span class="who">${m.err ? "Not run" : "Claude"}</span>${esc(m.text)}${(m.trials || []).map(resLine).join("")}${(m.refused || []).map((w) => `<div class="res">refused before running: ${esc(w)}</div>`).join("")}</div>`).join("")
+      || `<span class="muted">Nothing said yet. Describe a strategy, paste a screenshot of one, or ask to change a trial. Each idea runs in its own Daytona sandbox and goes into this ledger.</span>`;
+    $("msgs").scrollTop = $("msgs").scrollHeight;
+    const ex = ["Buy the 50 least volatile S&P 500 stocks and rebalance monthly (Blitz and van Vliet)",
+                "Low volatility again, but measured over the last 6 months",
+                "Faber's rule on a 12-month average instead of 10"];
+    $("examples").innerHTML = ex.map((x) => `<button class="ghost" data-ex="${esc(x)}">${esc(x)}</button>`).join("");
+  }
+  $("send").disabled = deskBusy;
+  const box = $("desk-progress");
+  box.style.display = deskBusy ? "" : "none";
+  if (!deskBusy) return;
+  const ph = (s.live || {}).phase, st = ph === "running" ? 1 : ph === "done" ? 2 : 0;
+  if (st !== deskPhase) { deskPhase = st; deskPhaseAt = Date.now(); }
+  const t = (Date.now() - deskPhaseAt) / 1000, ease = (x, tau) => 1 - Math.exp(-x / tau);
+  const pct = [5 + 30 * ease(t, 12), 35 + 55 * ease(t, 25), 92 + 7 * ease(t, 3)][st];
+  $("dsteps").innerHTML = ["Claude reads your request and the ledger", "Daytona sandboxes run it", "the gate judges it"]
+    .map((x, i) => `<span class="${i < st ? "done" : i === st ? "on" : ""}">${i < st ? "✓ " : ""}${x}</span>`).join("<span style='border:0'>→</span>")
+    + `<span style="border:0" class="mono">${Math.round((Date.now() - deskStart) / 1000)}s</span>`;
+  $("dbar").style.width = pct.toFixed(1) + "%";
+}
+async function setImageFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  let url = await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(file); });
+  const im = new Image();
+  await new Promise((ok) => { im.onload = ok; im.src = url; });
+  const scale = Math.min(1, 1800 / Math.max(im.width, im.height));
+  if (scale < 1 || url.length > 4e6 || !/^data:image\/(png|jpeg|gif|webp);base64,/.test(url)) {
+    const c = document.createElement("canvas");
+    c.width = Math.round(im.width * scale); c.height = Math.round(im.height * scale);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+    url = c.toDataURL("image/jpeg", 0.9);
+  }
+  setImage(url);
+}
+function setImage(url) {
+  deskImage = url;
+  $("thumb").style.display = url ? "" : "none";
+  $("thumb").innerHTML = url ? `<img src="${url}"><button title="remove">✕</button>` : "";
+}
+async function deskSend() {
+  if (deskBusy || !program) return;
+  const text = $("say").value.trim(), img = deskImage;
+  if (!text && !img) return;
+  if (img) IMGS[await sha256(img)] = img;
+  deskBusy = true; deskStart = Date.now(); deskPhase = null;
+  deskLocal = [{who: "person", text, img}];
+  $("say").value = ""; setImage(null); render();
+  const timer = setInterval(() => S && S.evaluation && deskView(S), 500);
+  try {
+    const r = await fetch("/api/desk", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({program, text, image: img})});
+    const out = await r.json().catch(() => ({}));
+    deskLocal = r.ok ? [] : deskLocal.concat([{who: "claude", err: true, text: out.detail || "HTTP " + r.status}]);
+  } catch (e) {
+    deskLocal.push({who: "claude", err: true, text: String(e)});
+  }
+  clearInterval(timer);
+  deskBusy = false; deskKey = "";
+  await tick();
+}
+$("send").onclick = deskSend;
+$("say").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); deskSend(); } });
+$("attach").onclick = () => $("file").click();
+$("file").onchange = (e) => { setImageFile(e.target.files[0]); e.target.value = ""; };
+$("thumb").addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") setImage(null); });
+$("examples").addEventListener("click", (e) => { const b = e.target.closest("button[data-ex]"); if (b) { $("say").value = b.dataset.ex; $("say").focus(); } });
+$("desk-card").addEventListener("paste", (e) => {
+  const item = [...((e.clipboardData && e.clipboardData.items) || [])].find((i) => i.type.startsWith("image/"));
+  if (item) { e.preventDefault(); setImageFile(item.getAsFile()); }
+});
+["dragenter", "dragover"].forEach((k) => $("compose").addEventListener(k, (e) => { e.preventDefault(); $("compose").classList.add("drag"); }));
+["dragleave", "drop"].forEach((k) => $("compose").addEventListener(k, (e) => { e.preventDefault(); $("compose").classList.remove("drag"); }));
+$("compose").addEventListener("drop", (e) => setImageFile(e.dataTransfer.files[0]));
 
 function events(s) {
   const out = [];
   (s.events || []).forEach((e) => {
-    if (e.kind === "note" && e.tip) out.push(`<div class="ev tip"><b>Outside tip</b>, treated as data<div class="hyp">${esc(e.tip.slice(0, 280))}${e.tip.length > 280 ? "…" : ""}</div>${(e.flagged || []).map((x) => `<span class="flag">instruction ignored: ${esc(x)}</span>`).join("")}</div>`);
+    if (e.kind === "note" && "desk" in e) out.push(`<div class="ev tip"><b>A person at the desk</b>, round ${esc(e.round)}${e.screenshot_sha256 ? ", with a screenshot" : ""}: it chooses what is tested, never how it is judged<div class="hyp">${esc(String(e.desk || "").slice(0, 280))}</div>${(e.flagged || []).map((x) => `<span class="flag">instruction ignored: ${esc(x)}</span>`).join("")}</div>`);
+    else if (e.kind === "note" && e.tip) out.push(`<div class="ev tip"><b>Outside tip</b>, treated as data<div class="hyp">${esc(e.tip.slice(0, 280))}${e.tip.length > 280 ? "…" : ""}</div>${(e.flagged || []).map((x) => `<span class="flag">instruction ignored: ${esc(x)}</span>`).join("")}</div>`);
     else if (e.kind === "look") out.push(`<div class="ev look"><b class="mono">${esc(e.trial)}</b> opened the holdout: ${esc(e.verdict.why)} <span class="${e.verdict.passed ? "stop-cand" : "stop-holdout"}">${e.verdict.passed ? "passed" : "failed"}</span></div>`);
     else if (e.kind === "refusal") out.push(`<div class="ev refusal"><b>Refused</b> ${esc(e.request || "")} ${esc(e.trial || "")}: ${esc(e.why)}</div>`);
     else if (e.kind === "candidate") out.push(`<div class="ev candidate"><b class="mono">${esc(e.trial)}</b> registered as a candidate, sha256 <span class="hash">${esc((e.sha256 || "").slice(0, 16))}…</span></div>`);
@@ -597,7 +762,7 @@ function render() {
   if (mk !== moneyKey) { moneyKey = mk; money(s); }
   $("replay").textContent = replay ? "■ Stop" : "▶ Replay the hunt";
   $("replay").classList.toggle("on", !!replay);
-  stats(ev); funnel(ev); ledgerTable(ev); events(s); reportView(s); applyHL();
+  stats(ev); funnel(ev); ledgerTable(s); events(s); reportView(s); deskView(s); applyHL();
   $("footer").innerHTML = `Ledger: ${s.ledger.entries} entries, hash chain head <span class="hash">${esc(s.ledger.head.slice(0, 16))}…</span>. Every verdict on this page is recomputed from the ledger by the gate's code.`;
 }
 
@@ -606,7 +771,7 @@ function liveLoop(s) {
   const running = Object.values(L.tiles || {}).filter((t) => ["running", "starting"].includes(t.state)).length;
   const now = {
     ready: ["mem", "loading the ledger and the rules"],
-    proposing: ["claude", `thinking up round ${L.round || 1}: reading ${n} past trials and its memory`],
+    proposing: ["claude", deskBusy ? `reading your request against ${n} past trials` : `thinking up round ${L.round || 1}: reading ${n} past trials and its memory`],
     running: ["day", `running round ${L.round || ""} in ${running || "its"} sandboxes`],
     holdout: ["gate", "deciding whether any trial may open the locked holdout"],
     report: ["claude", "writing the research note"],
@@ -662,7 +827,7 @@ async function loadAll() {
   progs();
 }
 function progs() {
-  const rank = (p) => { const s = PROGS[p]; return !s.intact ? 9 : ({careful: 0, eager: 1, stack: 2}[(s.live || {}).style] ?? 5); };
+  const rank = (p) => { const s = PROGS[p]; return !s.intact ? 9 : ({careful: 0, eager: 1, stack: 2, books: 3}[(s.live || {}).style] ?? 5); };
   $("progs").innerHTML = Object.keys(PROGS).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map((p) => {
     const s = PROGS[p], ev = s.evaluation, L = s.live || {}, sel = p === program ? " sel" : "";
     if (!s.intact) return `<div class="prog bad${sel}" data-p="${esc(p)}"><div class="p-top"><b>${esc(p)}</b><span class="pill">a copy with one trial's Sharpe edited</span></div><div class="p-bad">hash chain broken: the gate refuses to judge it</div></div>`;

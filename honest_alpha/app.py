@@ -1,7 +1,8 @@
 """The live view: python -m uvicorn honest_alpha.app:app --port 8800
 
-Read-only. It reads runs/<program>/ledger.jsonl and live.json and recomputes
-every verdict with the gate; nothing here can change a ledger.
+It reads runs/<program>/ledger.jsonl and live.json and recomputes every verdict
+with the gate. The only thing that writes is the desk, where a person adds or
+changes strategies: it appends trials by the researcher's own path.
 """
 from __future__ import annotations
 
@@ -11,9 +12,16 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
-from honest_alpha import deflated, gate, settings
-from honest_alpha.ledger import Ledger, LedgerError
+from honest_alpha import settings
+
+settings.load_env()
+from honest_alpha import tracing  # noqa: E402
+
+tracing.setup()                    # before anything imports anthropic
+from honest_alpha import deflated, desk, gate  # noqa: E402
+from honest_alpha.ledger import Ledger, LedgerError  # noqa: E402
 
 app = FastAPI(title="Honest Alpha")
 STATIC = Path(__file__).with_name("static")
@@ -73,7 +81,7 @@ def state(program: str):
 
     keep = ("trial", "reason", "why", "verdict", "at", "hash", "tip", "flagged", "handling", "lesson", "round",
             "recall_trace", "holdout_skipped", "note", "sha256", "request", "stop", "researcher", "instructions",
-            "model", "holdout_decision", "comment", "eligible")
+            "model", "holdout_decision", "comment", "eligible", "desk", "reply", "screenshot_sha256")
     events = [{"kind": e["kind"], **{k: e[k] for k in keep if k in e}}
               for e in ledger.entries() if e["kind"] in ("look", "refusal", "candidate", "note", "rejected")]
     for e, src in zip([x for x in events if x["kind"] == "rejected"], ledger.entries("rejected")):
@@ -88,6 +96,8 @@ def state(program: str):
     for t in trials:
         rounds.setdefault(t.get("round"), {"round": t.get("round"), "trials": []})["trials"].append(t["trial"])
     for e in ledger.entries("note"):
+        if "desk" in e:
+            rounds.setdefault(e.get("round"), {"round": e.get("round"), "trials": []})["desk"] = e["desk"] or "(a screenshot)"
         if "lesson" in e:
             r = rounds.setdefault(e.get("round"), {"round": e.get("round"), "trials": []})
             r.setdefault("lesson", e["lesson"])
@@ -102,4 +112,22 @@ def state(program: str):
         "spy_curve": ledger.first("baseline")["result"].get("curve"),
         "looks": looks,
         "rounds": sorted((r for r in rounds.values() if r["round"] is not None), key=lambda r: r["round"]),
+        "desk": desk.history(program),
     }
+
+
+class DeskRequest(BaseModel):
+    program: str
+    text: str = ""
+    image: str | None = None
+
+
+@app.post("/api/desk")
+def desk_turn(req: DeskRequest):
+    _program_dir(req.program)
+    try:
+        return desk.ask(req.program, req.text, req.image)
+    except desk.Busy as e:
+        raise HTTPException(409, str(e))
+    except (ValueError, LedgerError) as e:
+        raise HTTPException(400, str(e))
