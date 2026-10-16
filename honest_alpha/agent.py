@@ -391,6 +391,8 @@ class Hunt:
                                         "comment": comment, "eligible": [t["trial"] for t in eligible]})
             self.live.log(f"researcher asks for holdout looks: {', '.join(str(q.get('trial')) for q in requests)}"
                           if requests else f"researcher requests no holdout look: {comment[:200]}")
+        if not requests:
+            return
         run_holdout = gate.holdout_runner()
         for q in requests:
             tid, reason = str(q.get("trial", "")), str(q.get("reason", ""))[:300]

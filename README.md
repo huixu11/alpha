@@ -2,10 +2,14 @@
 
 An AI quant researcher that hunts for trading strategies and can't fool itself.
 
+![The live view of a 60-trial hunt: every trial's Sharpe after costs, SPY's line, and the bar a trial must clear, rising with every try](docs/live-view.png)
+
 Backtests lie in three ways: they test on today's winners (survivorship), they forget trading costs, and they
 report the best of many tries as if it were the only one. An AI agent makes the third lie worse, because it can
 try ideas faster than any person and will happily report the luckiest. A pair rule I built backtested at 57.3% a
-year on 92 hand-picked stocks; in paper trading it lost 3.3% while SPY gained 0.7%.
+year, on 92 stocks I picked knowing which ones had won; its nine parameter variants ranged from 43% to 84% a year.
+Five weeks into paper trading it is down 3.3% while SPY is up 0.7%, which proves nothing either: the backtest could
+never have told me.
 
 Honest Alpha lets the agent search freely and makes it impossible for the search to fool itself.
 

@@ -6,6 +6,7 @@ import json
 import math
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -163,6 +164,31 @@ def test_a_candidate_must_pass_all_three_and_is_registered_not_traded(tmp_path):
     assert out["candidate"]
     cand = led.entries("candidate")[0]
     assert cand["trial"] == "T-0001" and len(cand["sha256"]) == 64 and "no order path" in cand["note"]
+
+
+class FakeClaude:
+    """Answers every request by calling the offered tool with `tool_input`."""
+
+    def __init__(self, tool_input: dict):
+        self.tool_input, self.messages, self.calls = tool_input, self, []
+
+    def create(self, **kw):
+        self.calls.append(kw)
+        block = SimpleNamespace(type="tool_use", name=kw["tools"][0]["name"], input=self.tool_input)
+        return SimpleNamespace(content=[block], stop_reason="tool_use")
+
+
+def test_declining_the_holdout_is_recorded_and_opens_nothing(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "RUNS", tmp_path)
+    monkeypatch.setattr(gate, "holdout_runner", lambda *a, **k: pytest.fail("the holdout data was loaded"))
+    program(tmp_path / "p", [0.70, 0.30])
+    hunt = agent.Hunt("p", executor=SimpleNamespace(name="none"))
+    hunt.client, hunt.model = FakeClaude({"requests": [], "comment": "neither passed the luck gate"}), "fake"
+    hunt.holdout_phase()
+    note = [e for e in hunt.ledger.entries("note") if "holdout_decision" in e][-1]
+    assert note["holdout_decision"] == [] and note["eligible"] == ["T-0001"] and "luck" in note["comment"]
+    assert not hunt.ledger.entries("look")
+    assert hunt.client.calls[0]["tool_choice"] == {"type": "auto"}
 
 
 # ---- the report -------------------------------------------------------------------------------
