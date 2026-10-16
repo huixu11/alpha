@@ -16,6 +16,7 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -52,16 +53,73 @@ def _summary(result: dict, data: "rb.Data") -> dict:
     }
 
 
+def _concat(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    full = [f for f in frames if len(f)]
+    return pd.concat(full, ignore_index=True) if full else frames[0]
+
+
+def _blend(runs: list[tuple[int, dict]], data: "rb.Data") -> dict:
+    """Sleeves as separate accounts, combined in return space and set back to their target weights after every
+    month-end close; the money moved between sleeves pays rb.SLIPPAGE, deducted from the blend's NAV."""
+    tw = np.array([w for w, _ in runs], dtype=float)
+    tw /= tw.sum()
+    index = runs[0][1]["nav"].index
+    navs = np.column_stack([r["nav"].to_numpy() for _, r in runs])
+    me = set(int(i) for i in data.me_idx)
+    pos = data.dates.get_indexer(index)
+    value = tw * navs[0]
+    nav = np.empty(len(index))
+    nav[0] = value.sum()
+    moved = paid = 0.0
+    for j in range(1, len(index)):
+        value = value * (navs[j] / navs[j - 1])
+        total = value.sum()
+        if int(pos[j]) in me:
+            m = float(np.abs(tw * total - value).sum())
+            cost = rb.SLIPPAGE * m
+            total -= cost
+            value = tw * total
+            moved += m
+            paid += cost
+        nav[j] = total
+
+    def avg(key: str) -> pd.Series:
+        return sum(t * r[key] for t, (_, r) in zip(tw, runs))
+
+    exposure = sum(t * r["exposure"].groupby("date")["exposure"].last().reindex(index).ffill().fillna(0.0)
+                   for t, (_, r) in zip(tw, runs))
+    return {
+        "variant": "blend", "params": runs[0][1]["params"], "nav": pd.Series(nav, index=index, name="blend"),
+        "years": runs[0][1]["years"],
+        "exposure": pd.DataFrame({"date": index, "exposure": exposure.to_numpy()}),
+        "invested": avg("invested"), "names_held": sum(r["names_held"] for _, r in runs),
+        "buy_notional": float(sum(t * r["buy_notional"] for t, (_, r) in zip(tw, runs))) + moved / 2,
+        "sell_notional": float(sum(t * r["sell_notional"] for t, (_, r) in zip(tw, runs))) + moved / 2,
+        "total_costs": float(sum(t * r["total_costs"] for t, (_, r) in zip(tw, runs))) + paid,
+        "trades": _concat([r["trades"] for _, r in runs]), "dropped": _concat([r["dropped"] for _, r in runs]),
+        "delisted": _concat([r["delisted"] for _, r in runs]),
+        "n_stale_evaluations": int(sum(r.get("n_stale_evaluations", 0) for _, r in runs)),
+    }
+
+
 def run(data: "rb.Data", family: str, params: dict, start: str, costs=COSTS_BPS) -> dict:
     """One backtest per cost level, from the first month-end on or after `start` to the data's last session."""
-    p = rb.Params(variant=family, **settings.FIXED_PARAMS, **params)
-    start_idx = rb.find_start(data, p, pd.Timestamp(start))
+    if family == "blend":
+        sleeves = [(params[w], rb.Params(variant=f, **settings.FIXED_PARAMS,
+                                         **{k: params[k] for k in space.FAMILIES.get(f, ("", ()))[1]}))
+                   for w, f in space.SLEEVES.items() if params[w] > 0]
+    else:
+        sleeves = [(1, rb.Params(variant=family, **settings.FIXED_PARAMS, **params))]
+    start_idx = max(rb.find_start(data, p, pd.Timestamp(start)) for _, p in sleeves)
     end_idx = len(data.dates) - 1
     out, curve, saved = {}, None, rb.SLIPPAGE
     try:
         for bps in costs:
             rb.SLIPPAGE = bps / 10_000
-            r = rb.run_variant(data, p, start_idx, end_idx)
+            if family == "blend":
+                r = _blend([(w, rb.run_variant(data, p, start_idx, end_idx)) for w, p in sleeves], data)
+            else:
+                r = rb.run_variant(data, sleeves[0][1], start_idx, end_idx)
             out[str(bps)] = _summary(r, data)
             if bps == 15 or curve is None:
                 nav = r["nav"]

@@ -39,8 +39,8 @@ Honest Alpha lets the agent search freely and makes it impossible for the search
 ## What it found
 
 The S&P 500 from mid-2015 to 2022. SPY buy-and-hold: a Sharpe of 0.58 after 15 bps per side. The same model
-(Claude Opus 5.5 on Amazon Bedrock), the same gate and the same data ran twice, with one paragraph of the researcher's
-instructions changed:
+(Claude Opus 5.5 on Amazon Bedrock), the same gate and the same data ran three times, with one paragraph of the
+researcher's instructions changed:
 
 - **The careful researcher** ran 8 of its 60 trials and stopped itself: *"None of the remaining knobs is likely to
   more than double the best Sharpe, and each extra trial raises the bar for all of them. So I am stopping the search
@@ -57,6 +57,11 @@ instructions changed:
   was 0.20 and 6.5% a year; SPY's was 1.10 and 21.5% a year. It lost to SPY in every year: $1M in it became
   $1.26M, while the same $1M in SPY became $2.05M. A request for a trial that had lost to SPY was refused without
   touching the holdout.
+- **The stacking researcher** could only propose blends: SPY and the four families as sleeves, each its own
+  account, set back to the target weights every month-end and paying costs on the money moved. In 28 trials no blend
+  beat SPY after costs. The best, three parts SPY to one part SPY timing, reached 0.574 against SPY's 0.578; every
+  sleeve added to SPY lowered the Sharpe. Its own note: *"stacking is unlikely to win."* The holdout stayed locked.
+  Two sandboxes timed out while starting and were not counted as trials.
 
 No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 

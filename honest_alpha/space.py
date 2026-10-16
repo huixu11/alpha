@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -67,8 +68,18 @@ KNOBS: dict[str, Knob] = {
     "pair_select": Knob("choice", "variance_of_difference", choices=("variance_of_difference", "topvol_lowcorr"),
                         help="how the two stocks are chosen"),
     "pair_top_vol": Knob("int", 10, 5, 30, help="topvol_lowcorr draws the pair from the N most volatile stocks"),
+    "w_spy": Knob("int", 1, 0, 10, help="relative weight of a SPY buy-and-hold sleeve, 0 leaves it out"),
+    "w_regime_spy": Knob("int", 1, 0, 10, help="relative weight of the regime_spy sleeve, 0 leaves it out"),
+    "w_regime_stocks": Knob("int", 1, 0, 10, help="relative weight of the regime_stocks sleeve, 0 leaves it out"),
+    "w_stocks_only": Knob("int", 1, 0, 10, help="relative weight of the stocks_only sleeve, 0 leaves it out"),
+    "w_pair_rule": Knob("int", 1, 0, 10, help="relative weight of the pair_rule sleeve, 0 leaves it out"),
 }
 
+# blend weight knob -> the family its sleeve runs; spy_bh is the benchmark variant and reads no knob
+SLEEVES = {"w_spy": "spy_bh", "w_regime_spy": "regime_spy", "w_regime_stocks": "regime_stocks",
+           "w_stocks_only": "stocks_only", "w_pair_rule": "pair_rule"}
+
+_WEIGHTS = tuple(SLEEVES)
 _REGIME = ("sma_months", "tr_months", "votes", "vol_target")
 _STOCKS = ("mom_months", "top_n", "hold_rank", "name_cap", "liq_min_usd")
 _BANDS = ("band_abs", "band_rel")
@@ -82,6 +93,9 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
                       _REGIME + _STOCKS + _BANDS + _BREAKER),
     "stocks_only": ("momentum stocks, always fully invested", _STOCKS + _BANDS + _BREAKER),
     "pair_rule": ("two stocks 50/50 chosen by a rule each month-end", _PAIR + _BREAKER),
+    "blend": ("sleeves of SPY and the four families above, each run as its own account and set back to the target "
+              "weights at every month-end, paying the cost level on the money moved; weights are relative, so 2 and 1 "
+              "mean two thirds and one third", _WEIGHTS + _REGIME + _STOCKS + _BANDS + _BREAKER + _PAIR),
 }
 # ew_universe_bh is left out: at a 100k account its 1/500 targets sit under the engine's
 # 500 USD minimum trade, so it holds cash and measures nothing
@@ -124,6 +138,8 @@ def validate(raw: Any) -> Idea:
     if unknown:
         raise ValueError(f"{family} has no knob {', '.join(unknown)}; its knobs are {', '.join(allowed)}")
     params = {k: KNOBS[k].check(k, given[k]) if k in given else KNOBS[k].default for k in allowed}
+    if family == "blend":
+        _normalize_blend(params)
     if "hold_rank" in params and params["hold_rank"] < params["top_n"]:
         raise ValueError("hold_rank must be at least top_n")
     # knobs the backtest never reads under these settings go back to their defaults, so they cannot fake a new trial
@@ -136,6 +152,20 @@ def validate(raw: Any) -> Idea:
     elif params.get("votes") == "b_only":
         params["sma_months"] = KNOBS["sma_months"].default
     return Idea(family, params)
+
+
+def _normalize_blend(params: dict[str, Any]) -> None:
+    """Weights in lowest terms, and knobs no active sleeve reads at their defaults, so neither fakes a new trial."""
+    active = [w for w in SLEEVES if params[w] > 0]
+    if len(active) < 2:
+        raise ValueError("a blend needs at least two sleeves with weight above 0")
+    g = math.gcd(*(params[w] for w in active))
+    for w in SLEEVES:
+        params[w] //= g
+    read = {k for w in active if SLEEVES[w] in FAMILIES for k in FAMILIES[SLEEVES[w]][1]}
+    for k in params:
+        if k not in SLEEVES and k not in read:
+            params[k] = KNOBS[k].default
 
 
 def describe() -> str:

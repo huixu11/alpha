@@ -65,6 +65,49 @@ def test_a_knob_the_backtest_ignores_cannot_fake_a_new_trial():
     assert a.key != space.validate({"family": "regime_spy", "params": {"votes": "b_only"}}).key
 
 
+TWO = {"w_spy": 1, "w_regime_spy": 1, "w_regime_stocks": 0, "w_stocks_only": 0, "w_pair_rule": 0}
+
+
+def test_a_blend_needs_two_sleeves():
+    with pytest.raises(ValueError, match="at least two sleeves"):
+        space.validate({"family": "blend", "params": {**TWO, "w_spy": 0}})
+    with pytest.raises(ValueError, match="at least two sleeves"):
+        space.validate({"family": "blend", "params": {k: 0 for k in TWO}})
+
+
+def test_blend_weights_are_relative():
+    half = space.validate({"family": "blend", "params": TWO})
+    assert space.validate({"family": "blend", "params": {**TWO, "w_spy": 2, "w_regime_spy": 2}}).key == half.key
+    assert space.validate({"family": "blend", "params": {**TWO, "w_spy": 2}}).key != half.key
+
+
+def test_a_left_out_sleeve_cannot_fake_a_new_trial():
+    base = space.validate({"family": "blend", "params": TWO})
+    assert space.validate({"family": "blend", "params": {**TWO, "pair_lookback": 126}}).key == base.key
+    assert space.validate({"family": "blend", "params": {**TWO, "top_n": 30, "hold_rank": 10}}).key == base.key
+    pair = {**TWO, "w_pair_rule": 1}
+    assert (space.validate({"family": "blend", "params": {**pair, "pair_lookback": 126}}).key
+            != space.validate({"family": "blend", "params": pair}).key)
+
+
+def test_the_old_families_validate_as_before():
+    import hashlib
+    for fam, (_, knobs) in space.FAMILIES.items():
+        if fam == "blend":
+            continue
+        blob = json.dumps({"family": fam, "params": {k: space.KNOBS[k].default for k in knobs}},
+                          sort_keys=True, separators=(",", ":"))
+        assert space.validate({"family": fam, "params": {}}).key == hashlib.sha256(blob.encode()).hexdigest()
+    seen = 0
+    for path in sorted(settings.RUNS.glob("*/ledger.jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            e = json.loads(line)
+            if e.get("kind") == "trial":
+                assert space.validate(e["idea"]).key == e["key"], (path, e["trial"])
+                seen += 1
+    assert seen or not any(settings.RUNS.glob("*/ledger.jsonl"))
+
+
 # ---- the ledger -------------------------------------------------------------------------------
 
 def test_an_edited_ledger_is_caught(tmp_path):
