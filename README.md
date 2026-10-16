@@ -82,7 +82,10 @@ copy .env.example .env                # fill in AWS (Bedrock), Daytona, Arize, S
 python scripts/build_data.py          # needs the bar cache; writes build/search_data.pkl and build/full_data.pkl
 python scripts/build_snapshot.py      # the Daytona snapshot, named after the code and data it holds
 python scripts/check_setup.py         # one line per service
-python scripts/hunt.py --program demo --tip-file tips/forum_post.txt
+python scripts/hunt.py --program demo --tip-file tips/forum_post.txt                  # the careful researcher
+python scripts/hunt.py --program eager --style eager --tip-file tips/forum_post.txt   # told to maximize
 python -m uvicorn honest_alpha.app:app --port 8800      # the live view
+python scripts/tamper_demo.py demo                      # edit a trial; the view shows where the chain broke
+python scripts/request_look.py demo T-0001 "why"        # a person asks the gate for a holdout look
 python -m pytest tests
 ```
