@@ -178,6 +178,31 @@ class FakeClaude:
         return SimpleNamespace(content=[block], stop_reason="tool_use")
 
 
+class FakeSandboxes:
+    """The second job's sandbox fails the way Daytona's quota does; the others return a result."""
+    name = "fake"
+
+    def run(self, jobs, start, on_event):
+        return [{"trial": j["trial"], "ok": False, "infra": True, "error": "Total memory limit exceeded"} if i == 1
+                else {"trial": j["trial"], "where": {"sandbox": "fake"}, **result(0.3)} for i, j in enumerate(jobs)]
+
+
+def test_a_crashed_sandbox_does_not_spend_a_trial(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "RUNS", tmp_path)
+    monkeypatch.delenv("SPECTRON_URL", raising=False)
+    program(tmp_path / "p", [])
+    hunt = agent.Hunt("p", executor=FakeSandboxes())
+    hunt.client, hunt.model = FakeClaude({"lesson": "start broad", "ideas": [
+        {"family": "regime_spy", "params": {"sma_months": 5}, "hypothesis": "a shorter trend"},
+        {"family": "stocks_only", "params": {}, "hypothesis": "momentum defaults"},
+        {"family": "stocks_only", "params": {"top_n": 99}, "hypothesis": "out of range"}]}), "fake"
+    assert hunt.round(1)
+    assert [e["trial"] for e in hunt.ledger.entries("trial")] == ["T-0001"]
+    assert [e["infra_failure"] for e in hunt.ledger.entries("note") if "infra_failure" in e] == ["T-0002"]
+    assert "outside" in hunt.ledger.entries("rejected")[0]["why"]
+    assert hunt.left() == gate.RULES["trial_budget"] - 1 and hunt.ledger.next_trial_ids(1) == ["T-0003"]
+
+
 def test_declining_the_holdout_is_recorded_and_opens_nothing(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "RUNS", tmp_path)
     monkeypatch.setattr(gate, "holdout_runner", lambda *a, **k: pytest.fail("the holdout data was loaded"))
