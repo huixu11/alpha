@@ -54,6 +54,7 @@ KNOBS: dict[str, Knob] = {
                   help="which market votes decide exposure (a = trend, b = momentum)"),
     "vol_target": Knob("float", 0.20, 0.10, 0.40, help="scale exposure down when SPY's 20-day vol exceeds this"),
     "mom_months": Knob("int", 12, 3, 12, help="stock ranking: N-month return skipping the latest month"),
+    "vol_months": Knob("int", 12, 3, 12, help="stock ranking: daily volatility over the last N months, lowest first"),
     "top_n": Knob("int", 20, 5, 50, help="stocks bought at each month-end"),
     "hold_rank": Knob("int", 40, 5, 100, help="a held stock is kept while it ranks inside this"),
     "name_cap": Knob("float", 0.10, 0.03, 0.25, help="largest weight of one stock"),
@@ -96,6 +97,9 @@ FAMILIES: dict[str, tuple[str, tuple[str, ...]]] = {
     "blend": ("sleeves of SPY and the four families above, each run as its own account and set back to the target "
               "weights at every month-end, paying the cost level on the money moved; weights are relative, so 2 and 1 "
               "mean two thirds and one third", _WEIGHTS + _REGIME + _STOCKS + _BANDS + _BREAKER + _PAIR),
+    "lowvol_stocks": ("the lowest-volatility stocks, always fully invested, with no trend or momentum test "
+                      "(Blitz and van Vliet 2007)",
+                      ("vol_months", "top_n", "hold_rank", "name_cap", "liq_min_usd") + _BANDS + _BREAKER),
 }
 # ew_universe_bh is left out: at a 100k account its 1/500 targets sit under the engine's
 # 500 USD minimum trade, so it holds cash and measures nothing

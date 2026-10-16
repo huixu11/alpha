@@ -29,7 +29,8 @@ def main() -> int:
     ap.add_argument("--proposer", choices=("claude", "random"), default="claude")
     ap.add_argument("--style", choices=sorted(agent.STYLES), default="careful",
                     help="careful: one hypothesis per trial; eager: chase the highest Sharpe with the whole budget; "
-                         "stack: blends of sleeves only, with the whole budget")
+                         "stack: blends of sleeves only, with the whole budget; "
+                         "books: published strategies as their authors wrote them")
     ap.add_argument("--tip-file", action="append", default=[], help="outside text the researcher reads as data")
     args = ap.parse_args()
     sys.stdout.reconfigure(errors="replace")

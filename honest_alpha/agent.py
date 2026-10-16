@@ -73,6 +73,12 @@ STYLES = {
     "stack": "Your job is to find out whether stacking strategies can beat SPY after costs. Propose only blend ideas: "
              "choose which sleeves to combine, their weights and the sleeves' knobs. Use the whole trial budget: "
              "propose a full batch every round, and search hard around whatever has worked best so far.",
+    "books": "Your job is to test strategies from the published literature as their authors wrote them: Faber's "
+             "10-month moving-average timing of SPY (regime_spy with votes a_only), Antonacci's 12-month absolute "
+             "momentum (regime_spy with votes b_only), Jegadeesh and Titman's 12-1 momentum (stocks_only), momentum "
+             "only in up markets (regime_stocks), and Blitz and van Vliet's low-volatility stocks (lowvol_stocks). "
+             "Start with each author's own parameters, then try only the variations the literature itself motivates; "
+             "say in each hypothesis which paper or book the idea comes from.",
 }
 
 REPORTER = """You are the reporter in Honest Alpha. Write the research note on this program for a portfolio manager.
@@ -463,7 +469,7 @@ def random_ideas(k: int, seed: int) -> list[dict]:
     rng = random.Random(seed)
     out = []
     for _ in range(k):
-        fam = rng.choice([f for f in space.FAMILIES if f != "blend"])
+        fam = rng.choice([f for f in space.FAMILIES if f not in ("blend", "lowvol_stocks")])
         params = {}
         for name in space.FAMILIES[fam][1]:
             kn = space.KNOBS[name]

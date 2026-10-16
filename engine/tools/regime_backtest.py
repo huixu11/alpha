@@ -157,6 +157,7 @@ class Params:
     stock_sma_months: int = 10     # per-stock trend filter (fixed at 10)
     tr_months: int = 12            # vote B lookback
     mom_months: int = 12           # 12-1 momentum lookback (skip most recent month)
+    vol_months: int = 12           # lowvol_stocks: daily volatility look-back in month-ends
     top_n: int = 20
     hold_rank: int = 40
     min_month_ends: int = 13
@@ -231,7 +232,7 @@ PAIR_VARIANTS = ("pair_fixed", "pair_rule")
 PAIR_SELECTS = ("variance_of_difference", "topvol_lowcorr")
 # the variants whose stock layer DECIDES something from the universe's bars at an
 # evaluation session, and is therefore guarded (pair_fixed only reports statistics)
-GUARDED_VARIANTS = ("regime_stocks", "stocks_only", "ew_universe_bh", "pair_rule")
+GUARDED_VARIANTS = ("regime_stocks", "stocks_only", "lowvol_stocks", "ew_universe_bh", "pair_rule")
 # sessions: a name is LIVE at t when it has a bar in [t - 63, t]. A quarter, not a fortnight: the window is how
 # long a cache may go unrefreshed before its silent names stop counting, and once they stop counting the guard
 # judges the few names that ARE refreshed against themselves and passes them (with [t-10, t] the 2026-09-19
@@ -745,6 +746,8 @@ def eligible_and_rank(data: Data, k: int, params: Params, held: list[str] | None
     if t is None:
         t = me[k]
     assert me[k] <= t and (k + 1 >= len(me) or t < me[k + 1]), "t must lie between month-end k and the next one"
+    if params.variant == "lowvol_stocks":
+        return lowvol_rank(data, k, params, held, t)
     need = max(params.min_month_ends, params.mom_months + 1)
     rows = []
     for tkr in candidates_at(data, t, held):
@@ -769,6 +772,42 @@ def eligible_and_rank(data: Data, k: int, params: Params, held: list[str] | None
         rows.append((tkr, float(mom)))
     frame = pd.DataFrame(rows, columns=["ticker", "momentum"])
     frame = frame.sort_values(["momentum", "ticker"], ascending=[False, True]).reset_index(drop=True)
+    frame["rank"] = np.arange(1, len(frame) + 1)
+    return frame
+
+
+def lowvol_rank(data: Data, k: int, params: Params, held: list[str] | None, t: int) -> pd.DataFrame:
+    """lowvol_stocks: eligible names at month-end k ranked by daily volatility, lowest first.
+
+    Blitz and van Vliet (2007): no trend and no momentum test, only a bar at t,
+    the month-end history and the liquidity floor. The score is the annualized
+    standard deviation of the daily total returns from month-end k - vol_months
+    to session t (data <= t only); a name with fewer than 80 percent of those
+    returns finite is skipped. `momentum` is NaN: the holdings report reads it.
+    """
+    me = data.me_idx
+    need = max(params.min_month_ends, params.vol_months + 1)
+    rows = []
+    if k + 1 >= need:
+        t0 = me[k - params.vol_months]
+        assert t0 < t
+        for tkr in candidates_at(data, t, held):
+            j = data.col[tkr]
+            if not data.has_bar[t, j]:
+                continue
+            if data.first_idx[j] > me[k - need + 1]:
+                continue
+            liq = data.dvol_med[t, j]
+            if not (np.isfinite(liq) and liq >= params.liq_min_usd):
+                continue
+            px = data.tr[t0: t + 1, j]
+            rets = px[1:] / px[:-1] - 1.0
+            ok = np.isfinite(rets)
+            if ok.sum() < 2 or ok.sum() < 0.8 * len(rets):
+                continue
+            rows.append((tkr, np.nan, float(np.std(rets[ok], ddof=1) * math.sqrt(252))))
+    frame = pd.DataFrame(rows, columns=["ticker", "momentum", "vol"])
+    frame = frame.sort_values(["vol", "ticker"], ascending=[True, True]).reset_index(drop=True)
     frame["rank"] = np.arange(1, len(frame) + 1)
     return frame
 
@@ -1337,7 +1376,7 @@ def build_orders(data: Data, params: Params, i: int, nav: float, shares: dict[st
     variant = params.variant
     is_asset = variant in ASSET_VARIANTS
     use_regime = variant in ("regime_stocks", "regime_spy") or variant in ASSET_REGIME_VARIANTS
-    use_stocks = variant in ("regime_stocks", "stocks_only")
+    use_stocks = variant in ("regime_stocks", "stocks_only", "lowvol_stocks")
     is_pair = variant in PAIR_VARIANTS
     monthly_only = is_pair or variant == "asset_cash_5050"   # trades at month-ends (and the first entry) only
     dead = dead or set()
@@ -1440,7 +1479,7 @@ def run_variant(data: Data, params: Params, start_idx: int, end_idx: int,
     variant = params.variant
     is_asset = variant in ASSET_VARIANTS
     use_regime = variant in ("regime_stocks", "regime_spy") or variant in ASSET_REGIME_VARIANTS
-    use_stocks = variant in ("regime_stocks", "stocks_only")
+    use_stocks = variant in ("regime_stocks", "stocks_only", "lowvol_stocks")
     use_volcap = use_regime and variant != "asset_regime_votes"
     is_pair = variant in PAIR_VARIANTS
     if is_asset and (not params.asset or params.asset not in data.col or params.asset not in data.vol20):

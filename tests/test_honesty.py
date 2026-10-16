@@ -53,6 +53,16 @@ def test_the_space_refuses_and_says_why(raw, words):
         space.validate(raw)
 
 
+def test_lowvol_stocks_ranks_by_volatility_only():
+    idea = space.validate({"family": "lowvol_stocks"})
+    assert idea.params["vol_months"] == 12 and "mom_months" not in idea.params
+    with pytest.raises(ValueError, match="has no knob mom_months"):
+        space.validate({"family": "lowvol_stocks", "params": {"mom_months": 6}})
+    for bad in (2, 13):
+        with pytest.raises(ValueError, match="outside"):
+            space.validate({"family": "lowvol_stocks", "params": {"vol_months": bad}})
+
+
 def test_no_family_can_name_a_stock():
     assert not any("pair_a" in knobs or "pair_b" in knobs or "asset" in knobs for _, knobs in space.FAMILIES.values())
 
