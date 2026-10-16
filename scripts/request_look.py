@@ -1,7 +1,7 @@
 """Ask the gate, as a person, to show one trial the locked holdout. The look is recorded and counts as a trial.
 
     python scripts/request_look.py sp500-eager T-0056 "the best Sharpe after costs"
-    python scripts/request_look.py sp500-eager T-0056 "..." --report      # then rewrite the research note
+    python scripts/write_report.py sp500-eager          # then have the reporter rewrite the note
 """
 from __future__ import annotations
 
@@ -26,7 +26,6 @@ def main() -> int:
     ap.add_argument("program")
     ap.add_argument("trial")
     ap.add_argument("reason")
-    ap.add_argument("--report", action="store_true", help="have the reporter rewrite the note afterwards")
     args = ap.parse_args()
     sys.stdout.reconfigure(errors="replace")
 
@@ -46,11 +45,6 @@ def main() -> int:
     hunt.memory.ensure_scopes()
     hunt.memory.remember(f"In Honest Alpha program {args.program}, a person opened the holdout for {args.trial}: "
                          f"{out['why']}. Candidate: {'yes' if out['candidate'] else 'no'}.", wait=True)
-    if args.report:
-        from honest_alpha import llm
-        hunt.client, hunt.model, hunt.where = llm.client()
-        note = hunt.write_report()
-        print("\n" + note["text"] + "\n\ngrounding: " + json.dumps(note["grounding"]))
     hunt.memory.close()
     tracing.flush()
     return 0

@@ -86,6 +86,11 @@ class Live:
     def __init__(self, path: Path):
         self.path = path
         self.state = {"phase": "idle", "round": 0, "tiles": {}, "log": [], "updated": _now()}
+        if path.exists():                    # a later script (a look, a rewritten note) adds to the view
+            try:
+                self.state.update(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, ValueError):
+                pass
         self._lock = threading.Lock()
 
     def set(self, **kw) -> None:

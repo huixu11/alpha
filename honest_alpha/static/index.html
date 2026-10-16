@@ -89,7 +89,7 @@
         <span><i style="background:var(--lucky)"></i>beat SPY, but consistent with luck</span>
         <span><i style="background:var(--holdout)"></i>failed the locked holdout</span>
         <span><i style="background:var(--cand)"></i>candidate</span>
-        <span class="muted">bar: Sharpe at 5 bps (top) to 30 bps (bottom); dot: 15 bps</span>
+        <span class="muted">bar: Sharpe at 5 bps (top) to 30 bps (bottom); dot: 15 bps; ring: its Sharpe on the locked holdout</span>
       </div>
     </div>
     <div class="card funnel"><h2>The gate</h2><div id="funnel"></div><div id="bars" class="muted" style="font-size:12px;margin-top:12px"></div></div>
@@ -173,6 +173,14 @@ function chart(ev) {
     const c = color(t), tip = `${t.trial} ${t.short}\nSharpe 5/15/30: ${f2(t.sharpe["5"])} / ${f2(t.sharpe["15"])} / ${f2(t.sharpe["30"])}\n${t.why}`;
     g += `<g><title>${esc(tip)}</title><line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["5"])}" y2="${y(t.sharpe["30"])}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
     g += `<circle cx="${x(i)}" cy="${y(t.sharpe["15"])}" r="4.5" fill="${c}"/></g>`;
+    const h = t.holdout;
+    if (h && h.sharpe != null) {
+      const hc = h.passed ? "var(--cand)" : "var(--holdout)", hy = y(h.sharpe);
+      g += `<g><title>${esc(`${t.trial} on the locked holdout: ${h.why}`)}</title>`
+        + `<line x1="${x(i)}" x2="${x(i)}" y1="${y(t.sharpe["15"]) + 5}" y2="${hy}" stroke="${hc}" stroke-width="1.5" stroke-dasharray="3 3"/>`
+        + `<circle cx="${x(i)}" cy="${hy}" r="6" fill="none" stroke="${hc}" stroke-width="2"/>`
+        + `<text x="${x(i) - 9}" y="${hy + 4}" text-anchor="end" style="fill:${hc}">${esc(t.trial)} on the holdout: ${f2(h.sharpe)} (SPY ${f2(h.spy_sharpe)})</text></g>`;
+    }
   });
   g += `<text x="${L}" y="${H - 6}">trial 1</text><text x="${W - R}" y="${H - 6}" text-anchor="end">trial ${n}</text>`;
   $("chart").innerHTML = g;

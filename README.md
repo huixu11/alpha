@@ -2,7 +2,7 @@
 
 An AI quant researcher that hunts for trading strategies and can't fool itself.
 
-![The live view of a 60-trial hunt: every trial's Sharpe after costs, SPY's line, and the bar a trial must clear, rising with every try](docs/live-view.png)
+![The live view of a 60-trial hunt: every trial's Sharpe after costs, SPY's line, the bar a trial must clear rising with every try, and the best trial falling from 0.72 to 0.20 on the locked holdout](docs/live-view.png)
 
 Backtests lie in three ways: they test on today's winners (survivorship), they forget trading costs, and they
 report the best of many tries as if it were the only one. An AI agent makes the third lie worse, because it can
@@ -50,10 +50,14 @@ instructions changed:
 - **The eager researcher**, told to find the highest Sharpe and use the whole budget, ran all 60 trials and tuned
   a momentum book from 0.22 to 0.72 after costs (13.5% a year). Nine trials beat SPY after 15 and 30 bps, and all
   nine failed the luck gate: after 60 tries, a trial needs a Sharpe of about 1.05, and the best Deflated Sharpe was
-  0.77 against 0.95. Its own last note: *"Honestly, this space probably holds no real edge."* It did not open the
-  holdout.
+  0.77 against 0.95. Its own last note: *"Honestly, this space probably holds no real edge."* It did not ask for a
+  holdout look.
+- **Then a person asked the gate for one look**, at the trial picked by a rule fixed beforehand (of those that beat
+  SPY after costs, the highest Deflated Sharpe: T-0056). On the locked holdout, from 2023 to September 2026, its Sharpe
+  was 0.20 and 6.5% a year; SPY's was 1.10 and 21.5% a year. It lost to SPY in every year. A request for a trial
+  that had lost to SPY was refused without touching the holdout.
 
-No candidate. Both research notes passed the grounding check: every number in them is in the ledger.
+No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 
 ## What it cannot do
 
