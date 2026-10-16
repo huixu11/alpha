@@ -2,7 +2,7 @@
 
 An AI quant researcher that hunts for trading strategies and can't fool itself.
 
-![The live view of a 60-trial hunt: every trial's Sharpe after costs, SPY's line, the bar a trial must clear rising with every try, and the best trial falling from 0.72 to 0.20 on the locked holdout](docs/live-view.png)
+![The live view of a 60-trial hunt: $1M in the best strategy Claude found became $1.26M on the locked holdout while SPY made $2.05M; every strategy's growth on the search window and the holdout; one dot per try against the bar that rises with every try](docs/live-view.png)
 
 Backtests lie in three ways: they test on today's winners (survivorship), they forget trading costs, and they
 report the best of many tries as if it were the only one. An AI agent makes the third lie worse, because it can
