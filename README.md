@@ -65,6 +65,10 @@ researcher's instructions changed:
 
 No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 
+One limit: each ledger counts only its own trials and looks. The 28 blends were judged as if the 68 earlier trials
+on the same data had not happened, and a new program gets three fresh holdout looks. Across all three programs the
+holdout has been opened once.
+
 ## What it cannot do
 
 Each line is a test in [`tests/test_honesty.py`](tests/test_honesty.py):
