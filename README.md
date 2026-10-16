@@ -54,8 +54,9 @@ instructions changed:
   holdout look.
 - **Then a person asked the gate for one look**, at the trial picked by a rule fixed beforehand (of those that beat
   SPY after costs, the highest Deflated Sharpe: T-0056). On the locked holdout, from 2023 to September 2026, its Sharpe
-  was 0.20 and 6.5% a year; SPY's was 1.10 and 21.5% a year. It lost to SPY in every year. A request for a trial
-  that had lost to SPY was refused without touching the holdout.
+  was 0.20 and 6.5% a year; SPY's was 1.10 and 21.5% a year. It lost to SPY in every year: $1M in it became
+  $1.26M, while the same $1M in SPY became $2.05M. A request for a trial that had lost to SPY was refused without
+  touching the holdout.
 
 No candidate. Every research note passed the grounding check: every number in it is in the ledger.
 
@@ -88,6 +89,7 @@ python scripts/build_snapshot.py      # the Daytona snapshot, named after the co
 python scripts/check_setup.py         # one line per service
 python scripts/hunt.py --program demo --tip-file tips/forum_post.txt                  # the careful researcher
 python scripts/hunt.py --program eager --style eager --tip-file tips/forum_post.txt   # told to maximize
+python scripts/hunt.py --program stack --style stack --rounds 3                       # blends of strategies only
 python -m uvicorn honest_alpha.app:app --port 8800      # the live view
 python scripts/tamper_demo.py demo                      # edit a trial; the view shows where the chain broke
 python scripts/request_look.py demo T-0001 "why"        # a person asks the gate for a holdout look
